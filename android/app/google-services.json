@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "565950325269",
+    "project_id": "autoclub-ai",
+    "storage_bucket": "autoclub-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565950325269:android:6d0969fa4e8c896128241c",
+        "android_client_info": {
+          "package_name": "com.example.auto_club_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKhxZ841CtanWIQBgPYh5snfpxXxmKpV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565950325269:android:0e6f54ef9921526528241c",
+        "android_client_info": {
+          "package_name": "com.example.autoclub_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKhxZ841CtanWIQBgPYh5snfpxXxmKpV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
