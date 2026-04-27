@@ -1,3 +1,5 @@
+import 'package:auto_club_ai/core/theme/app_theme.dart';
+import 'package:auto_club_ai/features/auth/presentation/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 // Import the generated options file
@@ -19,7 +21,7 @@ void main() async {
     print(" Firebase initialization failed: $e");
   }
 
-  // 3. Run your app
+
   runApp(const MyApp());
 }
 
@@ -30,14 +32,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AutoClub AI',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      // Replace this with your actual Login or Home screen
-      home: const Scaffold(
-        body: Center(child: Text("AutoClub AI Ready")),
-      ),
+      theme: AppTheme.lightTheme,
+      
+      home: LoginScreen(),
     );
   }
 }
