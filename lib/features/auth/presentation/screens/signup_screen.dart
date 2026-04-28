@@ -5,6 +5,10 @@ import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.da
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
+import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
+import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
+import 'package:auto_club_ai/features/auth/services/signup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -20,7 +24,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-
+  final AuthRepository _authRepository = AuthRepository();
+  final UserRepository _userRepository = UserRepository();
   @override
   void dispose() {
     _usernameController.dispose();
@@ -28,6 +33,17 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void signup(String username, String email, String password) async {
+    if (_formKey.currentState!.validate()) {
+      final newUser = await _authRepository.signUp(email: email, password: password, username: username);
+      if (newUser != null) {
+        await _userRepository.createUser(newUser.uid, username);
+        
+        if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    }
   }
 
   @override
@@ -176,11 +192,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
                     child: CustomButton(
-                      onTap: () {
-                        if (_formKey.currentState!.validate()) {
-                          // TODO: handle sign up
-                        }
-                      },
+                      onTap: ()=> signup(_usernameController.text.trim(),
+                      _emailController.text.trim(),
+                      _passwordController.text.trim()),
                       text: 'Create Account',
                     ),
                   ),

@@ -1,8 +1,10 @@
+import 'package:auto_club_ai/features/auth/presentation/screens/reset_password.dart';
 import 'package:auto_club_ai/features/auth/presentation/screens/signup_screen.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
+import 'package:auto_club_ai/features/auth/services/signin.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget 
@@ -24,6 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void signin(String email, String password) async {
+    if (_formKey.currentState!.validate()) {
+      await signInWithEmailAndPassword(email, password);
+    }
   }
 
   @override
@@ -107,16 +115,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsetsGeometry.symmetric(vertical: 5),
                       child: CustomButton(
-                        onTap: () {
-                          if (_formKey.currentState!.validate()) {
-                            // TODO: handle sign in
-                          }
-                        },
+                        onTap: () => signin(_emailController.text.trim(), _passwordController.text.trim()),
                         text: 'Sign In',
                       ),
                     ),
 
-                    
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsetsGeometry.symmetric(vertical: 5),
+                        child: TextLink(
+                          text: 'Forgot your password?',
+                          linkText: 'Reset Here',
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ResetPasswordScreen()));
+                          },
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

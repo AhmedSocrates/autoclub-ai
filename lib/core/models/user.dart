@@ -1,4 +1,7 @@
-class UserModel {
+// Equatable used for equality checking for BLoC state management
+import 'package:equatable/equatable.dart';
+
+class UserModel extends Equatable{
 
   final String userId;
   final String name;
@@ -35,4 +38,8 @@ class UserModel {
       'is_available': isAvailable,
     };
   }
+  
+  @override
+
+  List<Object?> get props => [userId, name, role, isMember, isAvailable];
 }
