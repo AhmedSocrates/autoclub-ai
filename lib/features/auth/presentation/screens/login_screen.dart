@@ -6,6 +6,7 @@ import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,7 +34,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void signin(String email, String password) async {
     if (_formKey.currentState!.validate()) {
-      await _authRepository.signIn(email: email, password: password);
+      try {
+        await _authRepository.signIn(email: email, password: password);
+      } catch (e) {
+        if (mounted) {
+          showAppAlert(
+            context,
+            message: e.toString().replaceFirst('Exception: ', ''),
+          );
+        }
+      }
     }
   }
 

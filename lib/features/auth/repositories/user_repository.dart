@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class UserRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Fetch the user document using their Auth UID
+
   Future<UserModel?> getUserData(String uid) async {
     try {
       DocumentSnapshot<Map<String, dynamic>>  doc = await _firestore.collection('users').doc(uid).get();
@@ -12,7 +12,7 @@ class UserRepository {
       if (doc.exists && doc.data() != null) {
         return UserModel.fromJson(doc.data()!);
       }
-      return null; // User document doesn't exist yet
+      return null;
     } catch (e) {
       throw Exception('Failed to fetch user data: $e');
     }

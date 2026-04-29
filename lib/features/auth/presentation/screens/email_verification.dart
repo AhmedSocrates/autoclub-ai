@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
@@ -17,18 +18,45 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final AuthRepository _authRepository = AuthRepository();
   
   void signOut() async {
-    await _authRepository.signOut();
+    try {
+      await _authRepository.signOut();
+    } catch (e) {
+      if (mounted) {
+        showAppAlert(
+          context,
+          message: e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+    }
   }
 
   void resendVerificationEmail() async {
-    await _authRepository.sendEmailVerification();
+    try {
+      await _authRepository.sendEmailVerification();
+    } catch (e) {
+      if (mounted) {
+        showAppAlert(
+          context,
+          message: e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+    }
   }
 
   void checkVerification() async {
-    final User? user = await _authRepository.getCurrentUser();
+    try {
+      final User? user = await _authRepository.getCurrentUser();
 
-    if(user!.emailVerified) {
-      if(mounted) context.read<AuthBloc>().add(AuthUserChanged(user));
+      if(user != null && user.emailVerified) {
+        if(mounted) context.read<AuthBloc>().add(AuthUserChanged(user));
+      }
+    } catch (e) {
+      if (mounted) {
+        showAppAlert(
+          context,
+          message: e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
     }
   }
 

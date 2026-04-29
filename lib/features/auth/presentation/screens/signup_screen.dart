@@ -8,6 +8,7 @@ import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart'
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,9 +39,18 @@ class _SignupScreenState extends State<SignupScreen> {
   // handle the signup by calling the signup and create user from user and auth repositories
   void signup(String username, String email, String password) async {
     if (_formKey.currentState!.validate()) {
-      final newUser = await _authRepository.signUp(email: email, password: password, username: username);
-      if (newUser != null) {
-        await _userRepository.createUser(newUser.uid, username);
+      try {
+        final newUser = await _authRepository.signUp(email: email, password: password, username: username);
+        if (newUser != null) {
+          await _userRepository.createUser(newUser.uid, username);
+        }
+      } catch (e) {
+        if (mounted) {
+          showAppAlert(
+            context,
+            message: e.toString().replaceFirst('Exception: ', ''),
+          );
+        }
       }
     }
   }
