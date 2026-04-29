@@ -11,6 +11,8 @@ class AuthRepository {
       password: password,
     );
     
+    await sendEmailVerification();
+
     return credential.user;
   }
 
@@ -24,5 +26,21 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  Future<void> sendEmailVerification() async {
+    User? user = _firebaseAuth.currentUser;
+    if(user != null) {
+      await user.sendEmailVerification();
+    }
+  }
+
+
+  Future<User?> getCurrentUser() async{
+    User? user = _firebaseAuth.currentUser;
+    if(user != null) {
+      await user.reload();
+    }
+    return _firebaseAuth.currentUser;
   }
 }

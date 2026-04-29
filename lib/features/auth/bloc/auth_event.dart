@@ -9,14 +9,15 @@ abstract class AuthEvent extends Equatable {
 
 class AppStarted extends AuthEvent {}
 class SignOutRequested extends AuthEvent {}
+class CreateAccount extends AuthEvent {}
 class AuthUserChanged extends AuthEvent {
   final User? firebaseUser;
   AuthUserChanged(this.firebaseUser);
 }
 
-class TwoFactorVerified extends AuthEvent {
+class EmailVerified extends AuthEvent {
   final UserModel user;
-  TwoFactorVerified(this.user);
+  EmailVerified(this.user);
   @override
   List<Object?> get props => [user];
 }

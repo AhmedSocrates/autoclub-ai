@@ -18,8 +18,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }) : super(AuthInitial()) {
     
     on<AppStarted>((event, emit) {
-      _authSubscription = authRepository.userStream.listen((user) {
-        add(AuthUserChanged(user));
+      _authSubscription = authRepository.userStream.listen((user) async {
+        if(user != null) {
+          try {
+            await user.reload();
+            add(AuthUserChanged(user));
+          } catch(e) {
+            await authRepository.signOut();
+            add(AuthUserChanged(null));
+          }
+        } 
+        else {
+          add(AuthUserChanged(null));
+        }
       });
     });
 
@@ -30,11 +41,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthLoading());
         try {
+          if (!event.firebaseUser!.emailVerified) {
+            emit(AwaitingEmailVerfication());
+            return;
+          }
+
           final userProfile = await userRepository.getUserData(event.firebaseUser!.uid);
 
           if (userProfile != null) {
-            // User is logged in → require 2FA before granting full access
-            emit(AwaitingTwoFactor(userProfile));
+            emit(Authenticated(userProfile));
           } else {
             emit(AuthError("User profile data not found in database."));
           }
@@ -44,7 +59,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
 
-    on<TwoFactorVerified>((event, emit) {
+    on<EmailVerified>((event, emit) {
       emit(Authenticated(event.user));
     });
 
@@ -52,6 +67,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await authRepository.signOut();
       emit(Unauthenticated());
     });
+
+    on<CreateAccount>((event, emit) async{
+      emit(AuthCreateAccount());
+    }); 
   }
 
   @override

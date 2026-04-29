@@ -1,15 +1,15 @@
 import 'package:auto_club_ai/core/theme/app_colors.dart';
 import 'package:auto_club_ai/core/theme/app_text_styles.dart';
-import 'package:auto_club_ai/features/auth/presentation/screens/login_screen.dart';
+import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
+import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
-import 'package:auto_club_ai/features/auth/services/signup.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -35,16 +35,20 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  // handle the signup by calling the signup and create user from user and auth repositories
   void signup(String username, String email, String password) async {
     if (_formKey.currentState!.validate()) {
       final newUser = await _authRepository.signUp(email: email, password: password, username: username);
       if (newUser != null) {
         await _userRepository.createUser(newUser.uid, username);
-        
-        if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }
+
+  void navigateToLogin() {
+    context.read<AuthBloc>().add(AuthUserChanged(null));
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +210,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: TextLink(
                         text: 'Already have an account? ',
                         linkText: 'Sign In',
-                        onTap: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen())),
+                        onTap: navigateToLogin,
                       ),
                     ),
                   ),

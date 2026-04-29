@@ -1,11 +1,13 @@
+import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
+import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
 import 'package:auto_club_ai/features/auth/presentation/screens/reset_password.dart';
-import 'package:auto_club_ai/features/auth/presentation/screens/signup_screen.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
-import 'package:auto_club_ai/features/auth/services/signin.dart';
+import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginScreen extends StatefulWidget 
 {
@@ -20,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController =  TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthRepository _authRepository = AuthRepository();
 
   @override
   void dispose() {
@@ -30,8 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void signin(String email, String password) async {
     if (_formKey.currentState!.validate()) {
-      await signInWithEmailAndPassword(email, password);
+      await _authRepository.signIn(email: email, password: password);
     }
+  }
+
+  // handle the navigation to the signup
+  void navigateToSignup() {
+    context.read<AuthBloc>().add(CreateAccount());
   }
 
   @override
@@ -103,11 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: TextLink(
                           text: 'Do not have an account?',
                           linkText: 'Register Now',
-                          onTap: () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => const SignupScreen(),
-                            ),
-                          ),
+                          onTap: navigateToSignup
                         ),
                       ),
                     ),

@@ -9,6 +9,7 @@ abstract class AuthState extends Equatable {
 
 class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
+class AuthCreateAccount extends AuthState {}
 class Unauthenticated extends AuthState {}
 
 class Authenticated extends AuthState {
@@ -18,12 +19,7 @@ class Authenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
-class AwaitingTwoFactor extends AuthState {
-  final UserModel user;
-  AwaitingTwoFactor(this.user);
-  @override
-  List<Object?> get props => [user];
-}
+class AwaitingEmailVerfication extends AuthState {}
 
 class AuthError extends AuthState {
   final String error;
