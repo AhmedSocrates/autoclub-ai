@@ -1,6 +1,8 @@
 import 'package:auto_club_ai/core/models/user.dart';
+import 'package:auto_club_ai/core/theme/app_text_styles.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -59,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               const SizedBox(height: 12),
-
+          
               // Role badge
               Chip(
                 label: Text(
