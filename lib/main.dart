@@ -11,14 +11,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart'; 
 
 void main() async {
-  // 1. Ensure Flutter bindings are initialized before calling native code
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialize Firebase safely
   try {
     await Firebase.initializeApp(
-      // This tells Firebase to look at firebase_options.dart and pick 
-      // the correct keys for Android, iOS, or Web depending on where it's running
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print(" Firebase initialized successfully!");
