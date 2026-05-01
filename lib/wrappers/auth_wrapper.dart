@@ -5,6 +5,7 @@ import 'package:auto_club_ai/features/auth/presentation/screens/login_screen.dar
 import 'package:auto_club_ai/features/auth/presentation/screens/signup_screen.dart';
 import 'package:auto_club_ai/features/auth/presentation/screens/email_verification.dart';
 import 'package:auto_club_ai/features/home/home.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,7 +14,16 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      
+      listenWhen: (previous, current) => current is AuthError,
+      listener: (context, state) {
+        if(state is AuthError) {
+          showAppAlert(context, message: state.error);
+        }
+      },
+
+      buildWhen: (previous, current) => current is !AuthError, 
       builder: (context, state) {
         if (state is AuthInitial || state is AuthLoading) {
           return const Scaffold(
@@ -28,7 +38,7 @@ class AuthWrapper extends StatelessWidget {
         if (state is Authenticated) {
           return HomeScreen(user: state.user);
         }
-        if (state is Unauthenticated || state is AuthError) {
+        if (state is Unauthenticated) {
           return const LoginScreen();
         }
 

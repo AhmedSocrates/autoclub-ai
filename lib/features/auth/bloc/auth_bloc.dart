@@ -58,9 +58,58 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       }
     });
+    
+    on<SignInRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        await authRepository.signIn(email: event.email, password: event.password);
+        
+      } catch(e) {
+        emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+        add(AuthUserChanged(null));
+      }
+    }); 
+
+    on<SignUpRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        final User? newUser = await authRepository.signUp(email: event.email, password: event.password, username: event.username);
+        if(newUser != null) {
+          await userRepository.createUser(newUser.uid, event.username); 
+        }
+      } catch(e) {
+        emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+        add(AuthUserChanged(null));
+      } 
+    });
+
+
+    on<EmailVerificationCompleted>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        final User? user = await authRepository.getCurrentUser();
+        if (user != null && !user.emailVerified) {
+          emit(AuthError("Your email has not been verified yet. Please check your inbox."));
+          emit(AwaitingEmailVerfication());
+        } else {
+          add(AuthUserChanged(user));
+        }
+    } catch(e) {
+      emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+    }
+    });
+
 
     on<EmailVerified>((event, emit) {
       emit(Authenticated(event.user));
+    });
+
+    on<EmailVerificationRequested>((event, emit) async{
+      try {
+        await authRepository.sendEmailVerification();
+      } catch (e) {
+        emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+      }
     });
 
     on<SignOutRequested>((event, emit) async {

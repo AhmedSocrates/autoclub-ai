@@ -5,8 +5,6 @@ import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.da
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
-import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
-import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,8 +21,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController =  TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthRepository _authRepository = AuthRepository();
-
+  
+  
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,18 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void signin(String email, String password) async {
+  void signin(BuildContext context, String email, String password) async {
     if (_formKey.currentState!.validate()) {
-      try {
-        await _authRepository.signIn(email: email, password: password);
-      } catch (e) {
-        if (mounted) {
-          showAppAlert(
-            context,
-            message: e.toString().replaceFirst('Exception: ', ''),
-          );
-        }
-      }
+        context.read<AuthBloc>().add(SignInRequested(email, password));
     }
   }
 
@@ -129,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsetsGeometry.symmetric(vertical: 5),
                       child: CustomButton(
-                        onTap: () => signin(_emailController.text.trim(), _passwordController.text.trim()),
+                        onTap: () => signin(context, _emailController.text.trim(), _passwordController.text.trim()),
                         text: 'Sign In',
                       ),
                     ),

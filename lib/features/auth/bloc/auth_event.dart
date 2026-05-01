@@ -9,11 +9,29 @@ abstract class AuthEvent extends Equatable {
 
 class AppStarted extends AuthEvent {}
 class SignOutRequested extends AuthEvent {}
+
+class SignInRequested extends AuthEvent {
+  final String email, password;
+  SignInRequested(this.email, this.password);
+}
+
+class SignUpRequested extends AuthEvent {
+  final String username, email, password;
+  SignUpRequested(this.username ,this.email, this.password);
+}
+
+class EmailVerificationCompleted extends AuthEvent {}
+class EmailVerificationRequested extends AuthEvent {}
+
+
+// handling the change of signup and signin screens
+// because the stack doesnt work well when i change the states of signed in user
 class CreateAccount extends AuthEvent {}
 class AuthUserChanged extends AuthEvent {
   final User? firebaseUser;
   AuthUserChanged(this.firebaseUser);
 }
+
 
 class EmailVerified extends AuthEvent {
   final UserModel user;

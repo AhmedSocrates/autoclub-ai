@@ -16,7 +16,10 @@ class AuthRepository {
 
       return credential.user;
     } catch (e) {
-      throw Exception('Failed to sign up: $e');
+      if (e is FirebaseAuthException) {
+      throw Exception(_mapSignUpFirebaseError(e.code));
+    }
+    throw Exception('Sign up failed. Please try again.');
     }
   }
 
@@ -28,7 +31,10 @@ class AuthRepository {
       );
       return credential.user;
     } catch (e) {
-      throw Exception('Failed to sign in: $e');
+      if (e is FirebaseAuthException) {
+      throw Exception(_mapSignInFirebaseError(e.code));
+    }
+    throw Exception('Sign in failed. Please try again.');
     }
   }
 
@@ -47,7 +53,10 @@ class AuthRepository {
         await user.sendEmailVerification();
       }
     } catch (e) {
-      throw Exception('Failed to send email verification: $e');
+      if (e is FirebaseAuthException) {
+      throw Exception(_mapEmailSendFirebaseError(e.code));
+    }
+    throw Exception('Error in sending email verification. Please try again');
     }
   }
 
@@ -60,7 +69,64 @@ class AuthRepository {
       }
       return _firebaseAuth.currentUser;
     } catch (e) {
-      throw Exception('Failed to get current user: $e');
+      if (e is FirebaseAuthException) {
+      throw Exception(_mapReloadFirebaseError(e.code));
     }
+    throw Exception('Error in fetching user status. Please try again');
+    }
+  }
+}
+
+
+// to change the error messages to be more suitable and readable
+String _mapSignInFirebaseError(String code) {
+    switch (code) {
+      case 'invalid-credential': return 'Invalid email or password.';
+      case 'too-many-requests': return 'Too many attempts. Try again later.';
+      default: return 'Sign in failed. Please try again.';
+    }
+}
+
+
+
+String _mapSignUpFirebaseError(String code) {
+  switch (code) {
+    case 'email-already-in-use':
+      return 'An account already exists with this email.';
+    case 'invalid-email':
+      return 'Please enter a valid email address.';
+    case 'operation-not-allowed':
+      return 'Sign up is currently unavailable. Try again later.';
+    case 'too-many-requests':
+      return 'Too many attempts. Try again later.';
+    default:
+      return 'Sign up failed. Please try again.';
+  }
+}
+
+String _mapEmailSendFirebaseError(String code) {
+  switch (code) {
+     case 'too-many-requests':
+      return 'Too many attempts. Please wait before trying again.';
+    case 'network-request-failed':
+      return 'No internet connection.';
+    default:
+      return 'Failed to send verification email. Try again.';
+  }
+}
+
+
+String _mapReloadFirebaseError(String code) {
+  switch (code) {
+    case 'user-not-found':
+      return 'Your account no longer exists. Please sign up again.';
+    case 'user-disabled':
+      return 'Your account has been disabled. Please contact support.';
+    case 'network-request-failed':
+      return 'No internet connection. Please try again.';
+    case 'too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    default:
+      return 'Something went wrong. Please try again.';
   }
 }
