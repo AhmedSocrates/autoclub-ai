@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.autoclub_ai"
+    namespace = "com.example.auto_club_ai"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
