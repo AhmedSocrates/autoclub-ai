@@ -10,14 +10,15 @@ import 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
   final UserRepository userRepository;
-  late StreamSubscription<User?> _authSubscription;
+  StreamSubscription<User?>? _authSubscription;
 
   AuthBloc({
     required this.authRepository,
     required this.userRepository,
   }) : super(AuthInitial()) {
     
-    on<AppStarted>((event, emit) {
+    on<AppStarted>((event, emit) async {
+      await _authSubscription?.cancel();
       _authSubscription = authRepository.userStream.listen((user) async {
         if(user != null) {
           try {
@@ -124,7 +125,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
-    _authSubscription.cancel(); // Always clean up your streams!
+    _authSubscription?.cancel(); // Always clean up your streams!
     return super.close();
   }
 }
