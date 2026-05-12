@@ -1,17 +1,22 @@
-// lib/features/membership/bloc/membership_event.dart
 import 'package:flutter/foundation.dart';
 
 @immutable
 abstract class MembershipEvent {}
 
 class SubmitApplicationEvent extends MembershipEvent {
-  final String name;
-  final String studentId;
-  final String reason;
+  final String uid;
+  final String userName;
+  final String committee;
+  final String position;
+  final String whyPosition;
+  final String experience;
 
   SubmitApplicationEvent({
-    required this.name,
-    required this.studentId,
-    required this.reason,
+    required this.uid,
+    required this.userName,
+    required this.committee,
+    required this.position,
+    required this.whyPosition,
+    required this.experience,
   });
 }
