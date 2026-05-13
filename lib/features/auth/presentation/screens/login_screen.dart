@@ -1,9 +1,8 @@
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
-import 'package:auto_club_ai/features/auth/presentation/screens/reset_password.dart';
-import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.dart';
+import 'package:auto_club_ai/shared_widgets/custom_button.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/logo.dart';
-import 'package:auto_club_ai/features/auth/presentation/widgets/text_field.dart';
+import 'package:auto_club_ai/shared_widgets/text_field.dart';
 import 'package:auto_club_ai/features/auth/presentation/widgets/text_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,6 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
   // handle the navigation to the signup
   void navigateToSignup() {
     context.read<AuthBloc>().add(CreateAccount());
+  }
+
+  void navigateToResetPassword() {
+    context.read<AuthBloc>().add(ResetPasswordRequested());
   }
 
   @override
@@ -129,9 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: TextLink(
                           text: 'Forgot your password?',
                           linkText: 'Reset Here',
-                          onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ResetPasswordScreen()));
-                          },
+                          onTap: navigateToResetPassword,
                         ),
                       ),
                     ),

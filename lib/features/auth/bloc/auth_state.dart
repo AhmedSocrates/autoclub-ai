@@ -11,6 +11,9 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 class AuthCreateAccount extends AuthState {}
 class Unauthenticated extends AuthState {}
+class PasswordReset extends AuthState {}
+class PasswordResetLoading extends AuthState {}
+class PasswordResetEmailSent extends AuthState {}
 
 class Authenticated extends AuthState {
   final UserModel user;

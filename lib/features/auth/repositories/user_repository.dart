@@ -26,4 +26,13 @@ class UserRepository {
       throw Exception('Failed to create user: $e');
     }
   }
+
+  Future<void> deleteUser(String uid) async {
+    try {
+      
+      await _firestore.collection("users").doc(uid).delete();
+    } catch (e) {
+      throw Exception('Failed to create user: $e');
+    }
+  }
 }

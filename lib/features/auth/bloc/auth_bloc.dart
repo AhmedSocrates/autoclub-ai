@@ -120,8 +120,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<CreateAccount>((event, emit) async{
       emit(AuthCreateAccount());
-    }); 
+    });
+
+    on<ResetPasswordRequested>((event, emit) {
+      emit(PasswordReset());
+    });
+
+    on<BackToLogin>((event, emit) {
+      emit(Unauthenticated());
+    });
+
+    on<RefreshUserProfile>((event, emit) async {
+      try {
+        final firebaseUser = await authRepository.getCurrentUser();
+        if (firebaseUser == null) return;
+        final userProfile = await userRepository.getUserData(firebaseUser.uid);
+        if (userProfile != null) emit(Authenticated(userProfile));
+      } catch (_) {}
+    });
+
+    on<DeleteAccountRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        await userRepository.deleteUser(event.uid);
+        await authRepository.deleteAccount();
+        
+      } catch (e) {
+        emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+        add(AuthUserChanged(await authRepository.getCurrentUser()));
+      }
+    });
+
+    on<SendPasswordResetEmail>((event, emit) async {
+      emit(PasswordResetLoading());
+      try {
+        await authRepository.sendResetPasswordEmail(event.email);
+        emit(PasswordResetEmailSent());
+      } catch (e) {
+        emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
+        emit(PasswordReset());
+      }
+    });
   }
+
+  
 
   @override
   Future<void> close() {

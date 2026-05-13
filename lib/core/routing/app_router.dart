@@ -6,10 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_state.dart';
 
-// Auth screens
-import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/signup_screen.dart';
-import '../../features/auth/presentation/screens/email_verification.dart';
+// Auth wrapper
+import '../../wrappers/auth_wrapper.dart';
 
 // Membership screens
 import '../../features/membership/presentation/application_approvals_screen.dart';
@@ -25,75 +23,59 @@ import '../../features/settings/presentation/settings_screen.dart';
 
 class AppRouter {
   // ── Route path constants ───────────────────────────────────────────────────
-  static const String login           = '/login';
-  static const String register        = '/register';
-  static const String verifyEmail     = '/verify-email';
-  static const String apply           = '/apply';
+  static const String auth             = '/auth';
+  static const String apply            = '/apply';
   static const String membershipStatus = '/membership-status';
-  static const String approvals       = '/approvals';
-  static const String dashboard       = '/dashboard';
-  static const String myTasks         = '/my-tasks';
-  static const String social          = '/social';
-  static const String settings        = '/settings';
+  static const String approvals        = '/approvals';
+  static const String dashboard        = '/dashboard';
+  static const String myTasks          = '/my-tasks';
+  static const String social           = '/social';
+  static const String settings         = '/settings';
 
   static GoRouter createRouter(AuthBloc authBloc) {
     return GoRouter(
-      initialLocation: login,
+      initialLocation: auth,
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
 
       redirect: (BuildContext context, GoRouterState state) {
         final authState = authBloc.state;
         final loc = state.matchedLocation;
 
-        final isOnAuthScreen =
-            loc == login || loc == register || loc == verifyEmail;
-
-        // ── Rule 1: Not authenticated → login ──────────────────────────────
+        // ── Auth-owned states → AuthWrapper handles them internally ───────────
         if (authState is AuthInitial ||
+            authState is AuthLoading ||
             authState is Unauthenticated ||
-            authState is AuthError) {
-          if (!isOnAuthScreen) return login;
+            authState is AuthError ||
+            authState is AuthCreateAccount ||
+            authState is AwaitingEmailVerfication ||
+            authState is PasswordReset ||
+            authState is PasswordResetLoading ||
+            authState is PasswordResetEmailSent) {
+          if (loc != auth) return auth;
           return null;
         }
 
-        // ── Rule 2: Creating account → register ────────────────────────────
-        if (authState is AuthCreateAccount) {
-          if (loc != register) return register;
-          return null;
-        }
-
-        // ── Rule 3: Awaiting email verification → verify screen ────────────
-        if (authState is AwaitingEmailVerfication) {
-          if (loc != verifyEmail) return verifyEmail;
-          return null;
-        }
-
-        // ── Rule 4: Authenticated — role-based routing ─────────────────────
+        // ── Authenticated — role-based routing ────────────────────────────────
         if (authState is Authenticated) {
           final role = authState.user.role;
 
-          // Always redirect off auth screens once logged in
-          if (isOnAuthScreen) {
+          if (loc == auth) {
             if (role == 'member' || role == 'leader') return dashboard;
             if (role == 'pending') return membershipStatus;
-            return apply; // student / rejected
+            return apply;
           }
 
-          // Member / Leader: full app access; block guest-only routes
           if (role == 'member' || role == 'leader') {
             if (loc == apply || loc == membershipStatus) return dashboard;
-            // Only leaders may visit /approvals
             if (loc == approvals && role != 'leader') return dashboard;
             return null;
           }
 
-          // Pending: locked to the status screen
           if (role == 'pending') {
             if (loc != membershipStatus) return membershipStatus;
             return null;
           }
 
-          // Student / Rejected: locked to the apply screen
           if (loc != apply) return apply;
           return null;
         }
@@ -102,34 +84,32 @@ class AppRouter {
       },
 
       routes: <RouteBase>[
-        // ── Auth Routes ────────────────────────────────────────────────────
-        GoRoute(path: login,      builder: (_, __) => LoginScreen()),
-        GoRoute(path: register,   builder: (_, __) => SignupScreen()),
-        GoRoute(path: verifyEmail, builder: (_, __) => EmailVerificationScreen()),
+        // ── Auth (owned by AuthWrapper + AuthBloc) ────────────────────────────
+        GoRoute(path: auth, builder: (_, _) => const AuthWrapper()),
 
-        // ── Guest / Applicant Routes ───────────────────────────────────────
-        GoRoute(path: apply,           builder: (_, __) => const MembershipApplicationScreen()),
-        GoRoute(path: membershipStatus, builder: (_, __) => const MembershipStatusScreen()),
+        // ── Guest / Applicant Routes ──────────────────────────────────────────
+        GoRoute(path: apply,            builder: (_, _) => const MembershipApplicationScreen()),
+        GoRoute(path: membershipStatus, builder: (_, _) => const MembershipStatusScreen()),
 
-        // ── Admin Route (leader only, reached via Settings) ────────────────
-        GoRoute(path: approvals, builder: (_, __) => const ApplicationApprovalsScreen()),
+        // ── Admin Route (leader only) ─────────────────────────────────────────
+        GoRoute(path: approvals, builder: (_, _) => const ApplicationApprovalsScreen()),
 
-        // ── Member / Leader Shell (persistent bottom nav) ──────────────────
+        // ── Member / Leader Shell (persistent bottom nav) ─────────────────────
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
               MainNavigationShell(navigationShell: navigationShell),
           branches: [
             StatefulShellBranch(routes: [
-              GoRoute(path: dashboard, builder: (_, __) => const DashboardScreen()),
+              GoRoute(path: dashboard, builder: (_, _) => const DashboardScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: myTasks, builder: (_, __) => const TasksScreen()),
+              GoRoute(path: myTasks, builder: (_, _) => const TasksScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: social, builder: (_, __) => const SocialScreen()),
+              GoRoute(path: social, builder: (_, _) => const SocialScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: settings, builder: (_, __) => const SettingsScreen()),
+              GoRoute(path: settings, builder: (_, _) => const SettingsScreen()),
             ]),
           ],
         ),

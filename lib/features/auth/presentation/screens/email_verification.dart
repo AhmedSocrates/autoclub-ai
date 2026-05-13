@@ -1,4 +1,4 @@
-import 'package:auto_club_ai/features/auth/presentation/widgets/custom_button.dart';
+import 'package:auto_club_ai/shared_widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
