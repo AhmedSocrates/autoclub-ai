@@ -9,6 +9,8 @@ import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
+import 'package:auto_club_ai/features/settings/bloc/user/user_bloc.dart';
+import 'package:auto_club_ai/features/settings/repository/user_profile_repository.dart';
 
 import 'core/routing/app_router.dart';
 import 'firebase_options.dart';
@@ -31,12 +33,23 @@ void main() async {
       providers: [
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
+        RepositoryProvider(create: (_) => UserProfileRepository()),
       ],
-      child: BlocProvider(
-        create: (context) => AuthBloc(
-          authRepository: context.read<AuthRepository>(),
-          userRepository: context.read<UserRepository>(),
-        )..add(AppStarted()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(
+              authRepository: context.read<AuthRepository>(),
+              userRepository: context.read<UserRepository>(),
+            )..add(AppStarted()),
+          ),
+          BlocProvider(
+            create: (context) => UserBloc(
+              userProfileRepository: context.read<UserProfileRepository>(),
+              authRepository: context.read<AuthRepository>(),
+            ),
+          ),
+        ],
         child: const MyApp(),
       ),
     ),

@@ -22,7 +22,20 @@ class SignUpRequested extends AuthEvent {
 
 class EmailVerificationCompleted extends AuthEvent {}
 class EmailVerificationRequested extends AuthEvent {}
+class ResetPasswordRequested extends AuthEvent {}
+class BackToLogin extends AuthEvent {}
+class DeleteAccountRequested extends AuthEvent {
+  final String uid;
+  DeleteAccountRequested(this.uid);
+}
+class RefreshUserProfile extends AuthEvent {}
 
+class SendPasswordResetEmail extends AuthEvent {
+  final String email;
+  SendPasswordResetEmail(this.email);
+  @override
+  List<Object?> get props => [email];
+}
 
 // handling the change of signup and signin screens
 // because the stack doesnt work well when i change the states of signed in user

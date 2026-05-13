@@ -4,6 +4,7 @@ class AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   Stream<User?> get userStream => _firebaseAuth.authStateChanges();
+  String? get currentUserEmail => _firebaseAuth.currentUser?.email;
 
   Future<User?> signUp({required String email, required String password, required String username}) async {
     try {
@@ -75,7 +76,33 @@ class AuthRepository {
     throw Exception('Error in fetching user status. Please try again');
     }
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        await user.delete();
+      } 
+        
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_mapDeleteAccountFirebaseError(e.code));
+    } catch (e) {
+      throw Exception('Failed to delete account. Please try again.');
+    }
+  }
+
+  Future<void> sendResetPasswordEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        throw Exception(_mapResetPasswordFirebaseError(e.code));
+      }
+      throw Exception('Failed to send reset email. Please try again.');
+    }
+  }
 }
+
 
 
 // to change the error messages to be more suitable and readable
@@ -128,5 +155,37 @@ String _mapReloadFirebaseError(String code) {
       return 'Too many attempts. Please try again later.';
     default:
       return 'Something went wrong. Please try again.';
+  }
+}
+
+String _mapResetPasswordFirebaseError(String code) {
+  switch (code) {
+    case 'invalid-email':
+      return 'Please enter a valid email address.';
+    case 'user-not-found':
+      return 'No account found with this email address.';
+    case 'user-disabled':
+      return 'This account has been disabled. Please contact support.';
+    case 'too-many-requests':
+      return 'Too many attempts. Please wait before trying again.';
+    case 'network-request-failed':
+      return 'No internet connection. Please try again.';
+    default:
+      return 'Failed to send reset email. Please try again.';
+  }
+}
+
+String _mapDeleteAccountFirebaseError(String code) {
+  switch (code) {
+    case 'requires-recent-login':
+      return 'For security, please sign out and sign in again before deleting your account.';
+    case 'user-not-found':
+      return 'Account not found. It may have already been deleted.';
+    case 'network-request-failed':
+      return 'No internet connection. Please try again.';
+    case 'too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    default:
+      return 'Failed to delete account. Please try again.';
   }
 }
