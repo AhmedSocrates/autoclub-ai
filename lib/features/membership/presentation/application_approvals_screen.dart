@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -14,8 +15,9 @@ class ApplicationApprovalsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = MembershipRepository();
     return BlocProvider(
-      create: (_) => ApprovalsBloc(repository: repository)
-        ..add(FetchPendingApplications()),
+      create: (_) =>
+          ApprovalsBloc(repository: repository)
+            ..add(FetchPendingApplications()),
       child: _ApprovalsView(repository: repository),
     );
   }
@@ -35,6 +37,11 @@ class _ApprovalsView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Approvals Dashboard'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -52,9 +59,9 @@ class _ApprovalsView extends StatelessWidget {
                 if (state is ApprovalsError) {
                   return _ErrorView(
                     message: state.message,
-                    onRetry: () => context
-                        .read<ApprovalsBloc>()
-                        .add(FetchPendingApplications()),
+                    onRetry: () => context.read<ApprovalsBloc>().add(
+                      FetchPendingApplications(),
+                    ),
                   );
                 }
 
@@ -116,10 +123,9 @@ class _RegistrationToggle extends StatelessWidget {
             ),
             title: Text(
               'Open Recruitment',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
               isOpen
@@ -155,10 +161,9 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -186,8 +191,8 @@ class _EmptyView extends StatelessWidget {
           Text(
             'No pending applications',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -237,18 +242,15 @@ class _ApplicationCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
+                        style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '$committee  ·  $position',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -261,13 +263,12 @@ class _ApplicationCard extends StatelessWidget {
               Text(
                 'Why this position',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 4),
-              Text(whyPosition,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(whyPosition, style: Theme.of(context).textTheme.bodyMedium),
             ],
 
             if (experience.isNotEmpty) ...[
@@ -275,13 +276,12 @@ class _ApplicationCard extends StatelessWidget {
               Text(
                 'Experience',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 4),
-              Text(experience,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(experience, style: Theme.of(context).textTheme.bodyMedium),
             ],
 
             const SizedBox(height: 16),
@@ -313,7 +313,7 @@ class _ApplicationCard extends StatelessWidget {
 
   void _decide(BuildContext context, String uid, bool isApproved) {
     context.read<ApprovalsBloc>().add(
-          DecideApplicationEvent(studentId: uid, isApproved: isApproved),
-        );
+      DecideApplicationEvent(studentId: uid, isApproved: isApproved),
+    );
   }
 }

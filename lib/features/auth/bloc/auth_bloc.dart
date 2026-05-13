@@ -67,7 +67,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         
       } catch(e) {
         emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
-        add(AuthUserChanged(null));
       }
     }); 
 
@@ -80,7 +79,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       } catch(e) {
         emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
-        add(AuthUserChanged(null));
       } 
     });
 

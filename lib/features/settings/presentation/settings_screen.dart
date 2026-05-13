@@ -102,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
               title: const Text('Approvals Dashboard'),
               subtitle: const Text('Review pending applications'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go(AppRouter.approvals),
+              onTap: () => context.push(AppRouter.approvals),
             ),
           ],
 

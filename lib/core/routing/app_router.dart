@@ -48,11 +48,10 @@ class AppRouter {
         final isOnAuthScreen =
             loc == login || loc == register || loc == verifyEmail;
 
-        // ── Rule 1: Not authenticated → login ──────────────────────────────
         if (authState is AuthInitial ||
             authState is Unauthenticated ||
             authState is AuthError) {
-          if (!isOnAuthScreen) return login;
+          if (loc != login) return login;
           return null;
         }
 
