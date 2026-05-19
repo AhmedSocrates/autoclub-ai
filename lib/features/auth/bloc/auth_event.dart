@@ -52,3 +52,12 @@ class EmailVerified extends AuthEvent {
   @override
   List<Object?> get props => [user];
 }
+
+/// Fired by the Firestore user-document stream whenever the profile changes
+/// (e.g. role flips from "pending" to "member" after leader approval).
+class UserProfileUpdated extends AuthEvent {
+  final UserModel user;
+  UserProfileUpdated(this.user);
+  @override
+  List<Object?> get props => [user];
+}

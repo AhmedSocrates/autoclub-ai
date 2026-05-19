@@ -11,6 +11,8 @@ import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
 import 'package:auto_club_ai/features/settings/bloc/user/user_bloc.dart';
 import 'package:auto_club_ai/features/settings/repository/user_profile_repository.dart';
+import 'package:auto_club_ai/features/tasks/bloc/tasks_bloc.dart';
+import 'package:auto_club_ai/features/tasks/data/task_repository.dart';
 
 import 'core/routing/app_router.dart';
 import 'firebase_options.dart';
@@ -34,6 +36,7 @@ void main() async {
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
         RepositoryProvider(create: (_) => UserProfileRepository()),
+        RepositoryProvider(create: (_) => TaskRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -48,6 +51,10 @@ void main() async {
               userProfileRepository: context.read<UserProfileRepository>(),
               authRepository: context.read<AuthRepository>(),
             ),
+          ),
+          BlocProvider(
+            create: (context) =>
+                TasksBloc(repository: context.read<TaskRepository>()),
           ),
         ],
         child: const MyApp(),

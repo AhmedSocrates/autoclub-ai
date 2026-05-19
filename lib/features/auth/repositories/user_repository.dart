@@ -29,10 +29,20 @@ class UserRepository {
 
   Future<void> deleteUser(String uid) async {
     try {
-      
       await _firestore.collection("users").doc(uid).delete();
     } catch (e) {
       throw Exception('Failed to create user: $e');
     }
+  }
+
+  /// Emits a new [UserModel] every time the user's Firestore document changes
+  /// (e.g. when a leader approves their membership and the role flips to "member").
+  Stream<UserModel?> streamUserData(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromJson(doc.data()!);
+      }
+      return null;
+    });
   }
 }
