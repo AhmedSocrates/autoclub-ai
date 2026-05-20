@@ -45,4 +45,22 @@ class UserRepository {
       return null;
     });
   }
+
+  /// Streams users that can be assigned tasks (members + leaders).
+  Stream<List<UserModel>> streamAssignableUsers() {
+    return _firestore
+        .collection('users')
+        .where('role', whereIn: const ['member', 'leader'])
+        .snapshots()
+        .map((snapshot) {
+      final users = snapshot.docs
+          .map((d) => d.data())
+          .whereType<Map<String, dynamic>>()
+          .map(UserModel.fromJson)
+          .toList(growable: false);
+
+      final sorted = [...users]..sort((a, b) => a.name.compareTo(b.name));
+      return sorted;
+    });
+  }
 }

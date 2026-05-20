@@ -26,7 +26,7 @@ class MainNavigationShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.checklist_outlined),
             selectedIcon: Icon(Icons.checklist),
-            label: 'My Tasks',
+            label: 'Tasks',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),
