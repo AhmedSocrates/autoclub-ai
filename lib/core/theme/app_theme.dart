@@ -5,6 +5,7 @@ import 'app_text_styles.dart';
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
+      useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.primary, // Black
       scaffoldBackgroundColor: AppColors.background, // White
@@ -96,6 +97,35 @@ class AppTheme {
       dividerTheme: const DividerThemeData(
         color: AppColors.border,
         thickness: 1,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.white,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.black,
+        foregroundColor: AppColors.white,
+        elevation: 6,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.white,
+        indicatorColor: AppColors.accentGold,
+        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+          final selected = states.contains(MaterialState.selected);
+          return AppTextStyles.bodySm.copyWith(
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: selected ? AppColors.black : AppColors.textSecondary,
+          );
+        }),
+        iconTheme: MaterialStateProperty.resolveWith((states) {
+          final selected = states.contains(MaterialState.selected);
+          return IconThemeData(
+            color: selected ? AppColors.black : AppColors.textSecondary,
+          );
+        }),
       ),
       iconTheme: const IconThemeData(
         color: AppColors.black,
