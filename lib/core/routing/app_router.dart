@@ -17,7 +17,7 @@ import '../../features/membership/presentation/membership_status_screen.dart';
 // Shell + member screens
 import '../navigation/main_navigation_shell.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
-import '../../features/tasks/presentation/tasks_screen.dart';
+import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/social/presentation/social_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
