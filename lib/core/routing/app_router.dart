@@ -18,6 +18,7 @@ import '../../features/membership/presentation/membership_status_screen.dart';
 import '../navigation/main_navigation_shell.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
+import '../../features/events/presentation/leader_events_screen.dart';
 import '../../features/events/presentation/screens/add_event_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
@@ -105,7 +106,16 @@ class AppRouter {
               GoRoute(path: dashboard, builder: (_, _) => const DashboardScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: myTasks, builder: (_, _) => const TasksScreen()),
+              GoRoute(
+                path: myTasks,
+                builder: (context, _) {
+                  final state = authBloc.state;
+                  if (state is Authenticated && state.user.role == 'leader') {
+                    return const LeaderEventsScreen();
+                  }
+                  return const TasksScreen();
+                },
+              ),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(

@@ -11,6 +11,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
   final UserRepository userRepository;
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription? _userDocSubscription;
 
   AuthBloc({
     required this.authRepository,
@@ -37,6 +38,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     
     on<AuthUserChanged>((event, emit) async {
+      await _userDocSubscription?.cancel();
+      _userDocSubscription = null;
+
       if (event.firebaseUser == null) {
         emit(Unauthenticated());
       } else {
@@ -51,6 +55,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
           if (userProfile != null) {
             emit(Authenticated(userProfile));
+            // Keep a live subscription so role changes (e.g. pending → member
+            // after leader approval) are reflected without a re-login.
+            _userDocSubscription = userRepository
+                .streamUserData(event.firebaseUser!.uid)
+                .listen((updated) {
+              if (updated != null) add(UserProfileUpdated(updated));
+            });
           } else {
             emit(AuthError("User profile data not found in database."));
           }
@@ -58,6 +69,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(AuthError("Failed to fetch user data."));
         }
       }
+    });
+
+    on<UserProfileUpdated>((event, emit) {
+      // Only update if the new profile actually differs from the current state
+      // to avoid redundant rebuilds.
+      final current = state;
+      if (current is Authenticated && current.user == event.user) return;
+      emit(Authenticated(event.user));
     });
     
     on<SignInRequested>((event, emit) async {
@@ -167,7 +186,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
-    _authSubscription?.cancel(); // Always clean up your streams!
+    _authSubscription?.cancel();
+    _userDocSubscription?.cancel();
     return super.close();
   }
 }
