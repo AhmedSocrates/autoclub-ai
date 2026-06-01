@@ -18,25 +18,60 @@ class TaskModel extends Equatable {
   final String createdBy;
   final String? eventContext;
 
-  TaskModel({
+  TaskModel._({
     required this.taskId,
-    this.eventId = '',
-    this.name = '',
-    String? title,
-    this.description = '',
-    this.type = '',
-    DateTime? deadline,
-    this.status = false,
-    this.completionMessage = '',
+    required this.eventId,
+    required this.name,
+    required this.title,
+    required this.description,
+    required this.type,
+    required this.deadline,
+    required this.status,
+    required this.completionMessage,
     required this.assignedTo,
-    this.eventName = '',
-    this.assignedToName = '',
+    required this.eventName,
+    required this.assignedToName,
+    required this.createdAt,
+    required this.createdBy,
+    required this.eventContext,
+  });
+
+  factory TaskModel({
+    required String taskId,
+    String eventId = '',
+    String name = '',
+    String? title,
+    String description = '',
+    String type = '',
+    DateTime? deadline,
+    dynamic status = false,
+    String completionMessage = '',
+    required String assignedTo,
+    String eventName = '',
+    String assignedToName = '',
     DateTime? createdAt,
-    this.createdBy = '',
-    this.eventContext,
-  })  : title = title ?? name,
-        deadline = deadline ?? createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
-        createdAt = createdAt ?? deadline ?? DateTime.fromMillisecondsSinceEpoch(0);
+    String createdBy = '',
+    String? eventContext,
+  }) {
+    final fallbackDate = DateTime.now();
+    return TaskModel._(
+      taskId: taskId,
+      eventId: eventId,
+      name: name,
+      title: title ?? name,
+      description: description,
+      type: type,
+      deadline: deadline ?? createdAt ?? fallbackDate,
+      status: status,
+      completionMessage: completionMessage,
+      assignedTo: assignedTo,
+      eventName: eventName,
+      assignedToName: assignedToName,
+      createdAt: createdAt ?? deadline ?? fallbackDate,
+      createdBy: createdBy,
+      eventContext: eventContext,
+    );
+  }
 
   bool get isCompleted {
     if (status is bool) return status as bool;
@@ -74,20 +109,27 @@ class TaskModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    if (eventId.isNotEmpty || name.isNotEmpty || type.isNotEmpty || completionMessage.isNotEmpty) {
-      return {
-        'task_id': taskId,
-        'event_id': eventId,
-        'name': name,
-        'description': description,
-        'type': type,
-        'deadline': Timestamp.fromDate(deadline),
-        'status': isCompleted,
-        'completion_message': completionMessage,
-        'assigned_to': assignedTo,
-      };
-    }
+    return usesLegacySchema ? toLegacyJson() : toModernJson();
+  }
 
+  bool get usesLegacySchema =>
+      eventId.isNotEmpty || name.isNotEmpty || type.isNotEmpty || completionMessage.isNotEmpty;
+
+  Map<String, dynamic> toLegacyJson() {
+    return {
+      'task_id': taskId,
+      'event_id': eventId,
+      'name': name,
+      'description': description,
+      'type': type,
+      'deadline': Timestamp.fromDate(deadline),
+      'status': isCompleted,
+      'completion_message': completionMessage,
+      'assigned_to': assignedTo,
+    };
+  }
+
+  Map<String, dynamic> toModernJson() {
     return {
       'title': title,
       'description': description,
