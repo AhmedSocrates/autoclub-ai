@@ -11,6 +11,9 @@ import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
 import 'package:auto_club_ai/features/settings/bloc/user/user_bloc.dart';
 import 'package:auto_club_ai/features/settings/repository/user_profile_repository.dart';
+import 'package:auto_club_ai/features/events/bloc/event_bloc.dart';
+import 'package:auto_club_ai/features/events/bloc/event_detail_bloc.dart';
+import 'package:auto_club_ai/features/events/repositories/event_repository.dart';
 import 'package:auto_club_ai/features/tasks/bloc/task_bloc.dart';
 import 'package:auto_club_ai/features/tasks/repositories/task_repository.dart';
 
@@ -36,6 +39,7 @@ void main() async {
         RepositoryProvider(create: (_) => AuthRepository()),
         RepositoryProvider(create: (_) => UserRepository()),
         RepositoryProvider(create: (_) => UserProfileRepository()),
+        RepositoryProvider(create: (_) => EventRepository()),
         RepositoryProvider(create: (_) => TaskRepository()),
       ],
       child: MultiBlocProvider(
@@ -50,6 +54,16 @@ void main() async {
             create: (context) => UserBloc(
               userProfileRepository: context.read<UserProfileRepository>(),
               authRepository: context.read<AuthRepository>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => EventBloc(
+              eventRepository: context.read<EventRepository>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => EventDetailBloc(
+              eventRepository: context.read<EventRepository>(),
             ),
           ),
           BlocProvider(

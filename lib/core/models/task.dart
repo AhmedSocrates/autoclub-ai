@@ -12,6 +12,7 @@ class TaskModel extends Equatable {
   final String completionMessage;
   final String assignedTo;
   final String eventName;
+  final String assignedToName;
 
   const TaskModel({
     required this.taskId,
@@ -22,8 +23,8 @@ class TaskModel extends Equatable {
     required this.deadline,
     this.status = false,
     this.completionMessage = '',
-    // used only when returning the eventname from the database for the user to view the tasks
-    this.eventName = "",
+    this.eventName = '',
+    this.assignedToName = '',
     required this.assignedTo,
   });
 
@@ -41,10 +42,15 @@ class TaskModel extends Equatable {
     );
   }
 
-  TaskModel copyWith({String? taskId, String? eventName}) {
+  TaskModel copyWith({
+    String? taskId,
+    String? eventId,
+    String? eventName,
+    String? assignedToName,
+  }) {
     return TaskModel(
       taskId: taskId ?? this.taskId,
-      eventId: eventId,
+      eventId: eventId ?? this.eventId,
       name: name,
       description: description,
       type: type,
@@ -53,6 +59,7 @@ class TaskModel extends Equatable {
       completionMessage: completionMessage,
       assignedTo: assignedTo,
       eventName: eventName ?? this.eventName,
+      assignedToName: assignedToName ?? this.assignedToName,
     );
   }
 

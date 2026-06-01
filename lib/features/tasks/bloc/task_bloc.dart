@@ -29,15 +29,6 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       }
     });
 
-    on<AddTasks>((event, emit) async {
-      try {
-        await taskRepository.addTasks(event.tasks, event.eventId);
-        emit(TaskAlert('Tasks added successfully.'));
-      } catch (e) {
-        emit(TaskAlert(e.toString().replaceFirst('Exception: ', '')));
-      }
-    });
-
     on<DismissTaskAlert>((event, emit) {
       emit(TaskLoaded(_cachedTasks));
     });

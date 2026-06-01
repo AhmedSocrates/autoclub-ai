@@ -25,7 +25,7 @@ class TaskRepository {
 
       return userTasks;
     } catch (e) {
-      throw Exception('Failed to fetch tasks. Please try again.');
+      throw Exception('$e');
     }
   }
 
@@ -43,26 +43,6 @@ class TaskRepository {
           });
     } catch (e) {
       throw Exception('Failed to complete task. Please try again.');
-    }
-  }
-
-
-  // adding of tasks by the lead
-  // needs to get the event id from teh created event first
-  Future<void> addTasks(List<TaskModel> tasks, eventId) async {
-
-    try {
-      // this is for the creation of all tasks as one process
-      final WriteBatch batch = _firestore.batch();
-      for(final task in tasks ) {
-        // the final .doc is for the id generation
-        final ref = _firestore.collection("events").doc(eventId).collection("tasks").doc();
-        batch.set(ref, task.copyWith(taskId: ref.id).toJson());
-      }
-      await batch.commit();
-      
-    } catch(e) {
-       throw Exception('Failed to add tasks. Please try again.');
     }
   }
 

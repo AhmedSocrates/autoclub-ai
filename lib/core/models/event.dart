@@ -29,9 +29,22 @@ class EventModel extends Equatable {
     );
   }
 
+  EventModel copyWith({String? eventId}) {
+    return EventModel(
+      eventId: eventId ?? this.eventId,
+      name: name,
+      description: description,
+      date: date,
+      venue: venue,
+      flyer: flyer,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'event_id': eventId,
+      'name': name,
+      'description': description,
       'date': Timestamp.fromDate(date),
       'venue': venue,
       'flyer': flyer,
@@ -39,5 +52,5 @@ class EventModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [eventId, date, venue, flyer];
+  List<Object?> get props => [eventId, name, description, date, venue, flyer];
 }
