@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:auto_club_ai/core/theme/app_theme.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
@@ -23,6 +24,13 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+try {
+    await dotenv.load(fileName: ".env");
+    print("✅ DOTENV SUCCESS: .env file loaded successfully!");
+    print("🔑 GEMINI KEY FOUND: ${dotenv.env['GEMINI_API_KEY'] != null}");
+  } catch (e) {
+    print("❌ DOTENV CRITICAL ERROR: Could not load .env file! Details: $e");
+  }
   try {
     // Fixed: Only initialize Firebase once!
     await Firebase.initializeApp(

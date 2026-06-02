@@ -37,6 +37,7 @@ migrate_working_dir/
 .windows/
 .web/
 .ios/
+.env
 
 # Symbolication related
 app.*.symbols

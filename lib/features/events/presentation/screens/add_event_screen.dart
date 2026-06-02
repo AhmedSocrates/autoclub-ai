@@ -1,5 +1,6 @@
 import 'package:auto_club_ai/core/models/event.dart';
 import 'package:auto_club_ai/core/models/task.dart';
+import 'package:auto_club_ai/core/services/ai_service.dart';
 import 'package:auto_club_ai/core/theme/app_colors.dart';
 import 'package:auto_club_ai/core/theme/app_text_styles.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
@@ -17,6 +18,7 @@ import 'package:auto_club_ai/shared_widgets/text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class _TaskEntry {
   final nameController = TextEditingController();
@@ -47,11 +49,18 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final List<_TaskEntry> _tasks = [];
   List<Map<String, String>> _members = [];
   bool _isSubmitting = false;
+  bool _isGeneratingAI = false;
+  late final AIService _aiService; // Add this
+  
+  // Safely pull the key from the .env file!
+  final apiKey = dotenv.env['GEMINI_API_KEY'] ?? ''; 
+
 
   @override
   void initState() {
     super.initState();
     _loadMembers();
+    _aiService = AIService(apiKey);
   }
 
   @override
@@ -63,6 +72,41 @@ class _AddEventScreenState extends State<AddEventScreen> {
       t.dispose();
     }
     super.dispose();
+  }
+  Future<void> _generateTasksWithAI() async {
+    // Check if they wrote an event name/description first
+    if (_nameController.text.trim().isEmpty || _descriptionController.text.trim().isEmpty) {
+      showAppAlert(context, message: 'Please enter an Event Name and Description first so the AI knows what to plan.');
+      return;
+    }
+
+    setState(() => _isGeneratingAI = true);
+    
+    try {
+      final generatedTasks = await _aiService.generateTasks(
+        eventName: _nameController.text.trim(),
+        eventDescription: _descriptionController.text.trim(),
+      );
+
+      // Loop through AI results and create UI forms for each
+      setState(() {
+        for (var task in generatedTasks) {
+          final entry = _TaskEntry();
+          entry.nameController.text = task.name;
+          entry.descriptionController.text = task.description;
+          entry.deadline = task.deadline;
+          _tasks.add(entry);
+        }
+      });
+      
+      if (mounted) {
+        showAppAlert(context, message: 'AI successfully generated ${generatedTasks.length} tasks! Please review and assign members.');
+      }
+    } catch (e) {
+      if (mounted) showAppAlert(context, message: 'AI Generation failed.\n\nTechnical Details:\n$e');
+    } finally {
+      if (mounted) setState(() => _isGeneratingAI = false);
+    }
   }
 
   Future<void> _loadMembers() async {
@@ -78,6 +122,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
       _tasks.removeAt(i);
     });
   }
+
 
   void _submit() {
     // Validate deadline for each task manually
@@ -117,7 +162,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
         description: e.value.descriptionController.text.trim(),
         type: 'General',
         deadline: e.value.deadline!,
-        assignedTo: e.value.assignedUserId!,
+        assignedTo: e.value.assignedUserId ?? '',
       );
     }).toList();
 
@@ -224,11 +269,49 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         style: AppTextStyles.bodySm,
                       ),
                       const Spacer(),
+                      
+                      // -- NEW AI BUTTON --
+                      if (_isGeneratingAI)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: SizedBox(
+                            width: 20, height: 20, 
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: _generateTasksWithAI,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF7C3AED),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.auto_awesome, size: 16, color: AppColors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'AI Draft',
+                                  style: AppTextStyles.bodySm.copyWith(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      // -- END AI BUTTON --
+
+                      // -- EXISTING MANUAL BUTTON --
                       GestureDetector(
                         onTap: _addTask,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
@@ -236,11 +319,10 @@ class _AddEventScreenState extends State<AddEventScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.add,
-                                  size: 16, color: AppColors.white),
+                              const Icon(Icons.add, size: 16, color: AppColors.white),
                               const SizedBox(width: 4),
                               Text(
-                                'Add Task',
+                                'Add',
                                 style: AppTextStyles.bodySm.copyWith(
                                   color: AppColors.white,
                                   fontWeight: FontWeight.w600,
