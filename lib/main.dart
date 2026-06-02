@@ -26,10 +26,10 @@ void main() async {
   
 try {
     await dotenv.load(fileName: ".env");
-    print("✅ DOTENV SUCCESS: .env file loaded successfully!");
+    print(" DOTENV SUCCESS: .env file loaded successfully!");
     print("🔑 GEMINI KEY FOUND: ${dotenv.env['GEMINI_API_KEY'] != null}");
   } catch (e) {
-    print("❌ DOTENV CRITICAL ERROR: Could not load .env file! Details: $e");
+    print(" DOTENV CRITICAL ERROR: Could not load .env file! Details: $e");
   }
   try {
     // Fixed: Only initialize Firebase once!
