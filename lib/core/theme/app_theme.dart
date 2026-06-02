@@ -113,15 +113,15 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.white,
         indicatorColor: AppColors.accentGold,
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
-          final selected = states.contains(MaterialState.selected);
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
           return AppTextStyles.bodySm.copyWith(
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             color: selected ? AppColors.black : AppColors.textSecondary,
           );
         }),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          final selected = states.contains(MaterialState.selected);
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
           return IconThemeData(
             color: selected ? AppColors.black : AppColors.textSecondary,
           );

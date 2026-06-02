@@ -19,7 +19,7 @@ class PriorityPill extends StatelessWidget {
         ),
       LeaderTaskPriority.medium => (
           'Med',
-          AppColors.accentGold.withOpacity(0.25),
+          AppColors.accentGold.withValues(alpha: 0.25),
           AppColors.black,
         ),
       LeaderTaskPriority.low => (

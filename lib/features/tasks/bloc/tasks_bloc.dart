@@ -16,10 +16,10 @@ class TasksBloc extends Bloc<TasksEvent, TasksState> {
           await emit.forEach(
             repository.streamMyTasks(event.userId),
             onData: (tasks) => TasksLoaded(tasks),
-            onError: (_, _) => TasksError('Failed to load tasks.'),
+            onError: (e, _) => TasksError(e.toString()),
           );
         } catch (e) {
-          emit(TasksError('Could not connect to database.'));
+          emit(TasksError(e.toString()));
         }
       },
       transformer: restartable(),

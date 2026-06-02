@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class PasswordStrengthBar extends StatelessWidget {
   final PasswordStrength strength;
-  const PasswordStrengthBar({required this.strength});
+  const PasswordStrengthBar({super.key, required this.strength});
 
   @override
   Widget build(BuildContext context) {
