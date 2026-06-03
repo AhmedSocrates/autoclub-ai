@@ -1,145 +1,105 @@
-import 'package:auto_club_ai/core/models/task.dart';
-import 'package:auto_club_ai/core/theme/app_colors.dart';
-import 'package:auto_club_ai/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/models/task.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskModel task;
-  final VoidCallback onComplete;
+  final VoidCallback? onMarkComplete;
+  final VoidCallback? onTap;
 
-  const TaskCard({super.key, required this.task, required this.onComplete});
+  const TaskCard({
+    super.key,
+    required this.task,
+    this.onMarkComplete,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isOverdue = !task.status && task.deadline.isBefore(DateTime.now());
-    final deadlineColor = isOverdue ? AppColors.accentOrange : AppColors.textSecondary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isCompleted = task.isCompleted;
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: task.status ? AppColors.border : AppColors.borderDark,
-          width: 1.2,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top row: name + status badge ────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    task.name,
-                    style: AppTextStyles.h3.copyWith(
-                      color: task.status ? AppColors.textDisabled : AppColors.textPrimary,
-                      decoration: task.status ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
-                ),
-                if (task.status)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle_outline, size: 13, color: AppColors.black),
-                        const SizedBox(width: 4),
-                        Text('Done', style: AppTextStyles.label.copyWith(color: AppColors.black)),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+            // ── Reminder banner (due within 10 days) ──────────────────
+            if (!isCompleted && task.isDueSoon)
+              _ReminderBanner(daysLeft: task.daysUntilDue),
+            // ── Overdue banner ─────────────────────────────────────────
+            if (!isCompleted && task.isOverdue)
+              _OverdueBanner(context: context),
+            // ── Due today banner ───────────────────────────────────────
+            if (!isCompleted && task.isDueToday)
+              _DueTodayBanner(),
 
-            const SizedBox(height: 8),
-
-            // ── Event name + type chips ──────────────────────────────────
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                if (task.eventName.isNotEmpty)
-                  _Chip(label: task.eventName, icon: Icons.event_outlined),
-                _Chip(label: task.type, icon: Icons.label_outline),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // ── Description ─────────────────────────────────────────────
-            Text(
-              task.description,
-              style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            const SizedBox(height: 12),
-
-            // ── Deadline + action ────────────────────────────────────────
-            Row(
-              children: [
-                Icon(Icons.calendar_today_outlined, size: 13, color: deadlineColor),
-                const SizedBox(width: 4),
-                Text(
-                  DateFormat('dd MMM yyyy').format(task.deadline),
-                  style: AppTextStyles.bodySm.copyWith(color: deadlineColor),
-                ),
-                if (isOverdue) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    'Overdue',
-                    style: AppTextStyles.label.copyWith(color: AppColors.accentOrange),
-                  ),
-                ],
-                const Spacer(),
-                if (!task.status)
-                  GestureDetector(
-                    onTap: onComplete,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(8),
+            // ── Card body ──────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                decoration: isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                color: isCompleted
+                                    ? colorScheme.onSurfaceVariant
+                                    : colorScheme.onSurface,
+                              ),
+                        ),
                       ),
-                      child: Text(
-                        'Mark Complete',
-                        style: AppTextStyles.bodySm.copyWith(
-                          color: AppColors.textOnDark,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(width: 8),
+                      _StatusChip(isCompleted: isCompleted),
+                    ],
+                  ),
+                  if (task.description.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      task.description,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                  if (task.dueDate != null) ...[
+                    const SizedBox(height: 8),
+                    _DueDateRow(task: task),
+                  ],
+                  if (!isCompleted && onMarkComplete != null) ...[
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.tonal(
+                        onPressed: onMarkComplete,
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 16),
+                            SizedBox(width: 6),
+                            Text('Mark as Complete'),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-
-            // ── Completion message (if done) ─────────────────────────────
-            if (task.status && task.completionMessage.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  task.completionMessage,
-                  style: AppTextStyles.bodySm,
-                ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -147,29 +107,174 @@ class TaskCard extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  final String label;
-  final IconData icon;
+// ── Banners ──────────────────────────────────────────────────────────────────
 
-  const _Chip({required this.label, required this.icon});
+class _ReminderBanner extends StatelessWidget {
+  final int daysLeft;
+  const _ReminderBanner({required this.daysLeft});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      color: Colors.amber.shade50,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: AppColors.textSecondary),
-          const SizedBox(width: 4),
-          Text(label, style: AppTextStyles.label),
+          Icon(Icons.alarm_rounded, size: 15, color: Colors.amber.shade800),
+          const SizedBox(width: 6),
+          Text(
+            daysLeft == 1
+                ? 'Due tomorrow — complete this soon!'
+                : 'Due in $daysLeft days — don\'t forget!',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.amber.shade800,
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _OverdueBanner extends StatelessWidget {
+  final BuildContext context;
+  const _OverdueBanner({required this.context});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      color: colorScheme.errorContainer,
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              size: 15, color: colorScheme.onErrorContainer),
+          const SizedBox(width: 6),
+          Text(
+            'Overdue — please complete this task!',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onErrorContainer,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DueTodayBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      color: Colors.orange.shade50,
+      child: Row(
+        children: [
+          Icon(Icons.schedule_rounded, size: 15, color: Colors.orange.shade800),
+          const SizedBox(width: 6),
+          Text(
+            'Due today — finish before end of day!',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Due date row ─────────────────────────────────────────────────────────────
+
+class _DueDateRow extends StatelessWidget {
+  final TaskModel task;
+  const _DueDateRow({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final Color color;
+    final IconData icon;
+    final String prefix;
+
+    if (task.isCompleted) {
+      color = colorScheme.onSurfaceVariant;
+      icon = Icons.event_available_rounded;
+      prefix = 'Due ';
+    } else if (task.isOverdue) {
+      color = colorScheme.error;
+      icon = Icons.warning_amber_rounded;
+      prefix = 'Overdue · ';
+    } else if (task.isDueToday) {
+      color = Colors.orange.shade700;
+      icon = Icons.schedule_rounded;
+      prefix = 'Due today · ';
+    } else if (task.isDueSoon) {
+      color = Colors.amber.shade800;
+      icon = Icons.alarm_rounded;
+      prefix = 'Due ';
+    } else {
+      color = colorScheme.onSurfaceVariant;
+      icon = Icons.event_rounded;
+      prefix = 'Due ';
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          '$prefix${DateFormat.yMMMd().format(task.dueDate!)}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: (task.isOverdue ||
+                        task.isDueToday ||
+                        task.isDueSoon)
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Status chip ───────────────────────────────────────────────────────────────
+
+class _StatusChip extends StatelessWidget {
+  final bool isCompleted;
+  const _StatusChip({required this.isCompleted});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Chip(
+      label: Text(
+        isCompleted ? 'Done' : 'Pending',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isCompleted
+              ? colorScheme.onSecondaryContainer
+              : colorScheme.onPrimaryContainer,
+        ),
+      ),
+      backgroundColor: isCompleted
+          ? colorScheme.secondaryContainer
+          : colorScheme.primaryContainer,
+      padding: EdgeInsets.zero,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }

@@ -84,3 +84,8 @@ linux/flutter/generated_plugin_registrant.h
 linux/flutter/generated_plugins.cmake
 # Web
 lib/generated_plugin_registrant.dart
+
+# Flutter generated plugin registrants (any platform)
+**/flutter/generated_plugin_registrant.*
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift

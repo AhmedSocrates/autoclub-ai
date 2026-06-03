@@ -105,7 +105,16 @@ class AppRouter {
               GoRoute(path: dashboard, builder: (_, _) => const DashboardScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: myTasks, builder: (_, _) => const TasksScreen()),
+              GoRoute(
+                path: myTasks,
+                builder: (context, _) {
+                  final state = authBloc.state;
+                  if (state is Authenticated && state.user.role == 'leader') {
+                    return const LeaderEventsScreen();
+                  }
+                  return const TasksScreen();
+                },
+              ),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
