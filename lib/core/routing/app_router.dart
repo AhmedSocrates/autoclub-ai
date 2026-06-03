@@ -21,7 +21,6 @@ import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/events/presentation/screens/add_event_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
-import '../../features/events/presentation/leader_events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
 class AppRouter {
@@ -108,13 +107,7 @@ class AppRouter {
             StatefulShellBranch(routes: [
               GoRoute(
                 path: myTasks,
-                builder: (context, _) {
-                  final state = authBloc.state;
-                  if (state is Authenticated && state.user.role == 'leader') {
-                    return const LeaderEventsScreen();
-                  }
-                  return const TasksScreen();
-                },
+                builder: (_, _) => const TasksScreen(),
               ),
             ]),
             StatefulShellBranch(routes: [

@@ -16,6 +16,7 @@ import 'package:auto_club_ai/features/events/bloc/event_bloc.dart';
 import 'package:auto_club_ai/features/events/bloc/event_detail_bloc.dart';
 import 'package:auto_club_ai/features/events/repositories/event_repository.dart';
 import 'package:auto_club_ai/features/tasks/bloc/task_bloc.dart';
+import 'package:auto_club_ai/features/tasks/bloc/tasks_bloc.dart';
 import 'package:auto_club_ai/features/tasks/repositories/task_repository.dart';
 
 import 'core/routing/app_router.dart';
@@ -77,6 +78,11 @@ try {
           BlocProvider(
             create: (context) => TaskBloc(
               taskRepository: context.read<TaskRepository>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => TasksBloc(
+              repository: context.read<TaskRepository>(),
             ),
           ),
         ],

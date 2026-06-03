@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 class EventCard extends StatelessWidget {
   final EventWithTaskCount event;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
-  const EventCard({super.key, required this.event, required this.onTap});
+  const EventCard({super.key, required this.event, required this.onTap, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,13 @@ class EventCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _TaskBadge(count: event.taskCount),
+                  if (onDelete != null) ...[
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: onDelete,
+                      child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    ),
+                  ],
                 ],
               ),
 

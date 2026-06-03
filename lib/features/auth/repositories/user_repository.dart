@@ -46,6 +46,14 @@ class UserRepository {
     });
   }
 
+  Stream<int> streamMemberCount() {
+    return _firestore
+        .collection('users')
+        .where('role', whereIn: ['member', 'leader'])
+        .snapshots()
+        .map((snap) => snap.size);
+  }
+
   /// Streams users that can be assigned tasks (members + leaders).
   Stream<List<UserModel>> streamAssignableUsers() {
     return _firestore

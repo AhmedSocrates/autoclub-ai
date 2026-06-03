@@ -102,23 +102,33 @@ class _TasksScreenState extends State<TasksScreen> {
 
     if (state is TaskLoaded) {
       if (state.tasks.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.checklist_rounded, size: 64, color: AppColors.textDisabled),
-                const SizedBox(height: 16),
-                Text('No Tasks Assigned', style: AppTextStyles.h3),
-                const SizedBox(height: 8),
-                Text(
-                  'You have no tasks assigned to you yet.',
-                  style: AppTextStyles.bodySm,
-                  textAlign: TextAlign.center,
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async => _loadTasks(),
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.checklist_rounded, size: 64, color: AppColors.textDisabled),
+                        const SizedBox(height: 16),
+                        Text('No Tasks Assigned', style: AppTextStyles.h3),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You have no tasks assigned to you yet.',
+                          style: AppTextStyles.bodySm,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }

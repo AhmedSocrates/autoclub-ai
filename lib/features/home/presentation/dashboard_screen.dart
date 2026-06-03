@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
+import '../../auth/repositories/user_repository.dart';
+import '../../events/repositories/event_repository.dart';
 import '../../tasks/bloc/tasks_bloc.dart';
 import '../../tasks/bloc/tasks_event.dart';
 import '../../tasks/bloc/tasks_state.dart';
 import '../../../core/models/task.dart';
-import '../../tasks/presentation/task_detail_screen.dart';
+import '../../tasks/presentation/screens/task_detail_screen.dart';
 import '../../tasks/presentation/widgets/task_card.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -19,6 +22,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _loadedUserId;
+  int _memberCount = 0;
+  int _eventCount = 0;
+  StreamSubscription<int>? _memberSub;
+  StreamSubscription<int>? _eventSub;
 
   @override
   void didChangeDependencies() {
@@ -29,8 +36,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (_loadedUserId != uid) {
         _loadedUserId = uid;
         context.read<TasksBloc>().add(LoadMyTasksEvent(uid));
+        _subscribeCounts();
       }
     }
+  }
+
+  void _subscribeCounts() {
+    _memberSub?.cancel();
+    _eventSub?.cancel();
+    _memberSub = context.read<UserRepository>().streamMemberCount().listen(
+      (count) { if (mounted) setState(() => _memberCount = count); },
+    );
+    _eventSub = context.read<EventRepository>().streamEventCount().listen(
+      (count) { if (mounted) setState(() => _eventCount = count); },
+    );
+  }
+
+  @override
+  void dispose() {
+    _memberSub?.cancel();
+    _eventSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -149,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _StatCard(
                           label: 'Events',
-                          value: '0',
+                          value: '$_eventCount',
                           icon: Icons.event_outlined,
                           color: colorScheme.secondary,
                         ),
@@ -158,7 +184,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: _StatCard(
                           label: 'Members',
-                          value: '0',
+                          value: '$_memberCount',
                           icon: Icons.group_outlined,
                           color: colorScheme.error,
                         ),
@@ -216,7 +242,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ? null
                                       : () => context
                                           .read<TasksBloc>()
-                                          .add(MarkTaskCompleteEvent(t.taskId)),
+                                          .add(MarkTaskCompleteEvent(t.taskId, t.eventId, '')),
                                 ),
                               ))
                           .toList(),

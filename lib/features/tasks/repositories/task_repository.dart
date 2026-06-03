@@ -4,6 +4,33 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class TaskRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+   /// Streams all tasks assigned to [userId], sorted by deadline ascending.
+  Stream<List<TaskModel>> streamMyTasks(String userId) {
+    return _firestore
+        .collectionGroup('tasks')
+        .where('assigned_to', isEqualTo: userId)
+        .snapshots()
+        .map((snap) {
+      final tasks =
+          snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList();
+      tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
+      return tasks;
+    });
+  }
+
+  /// Streams every task in the club, sorted by deadline ascending (admin view).
+  Stream<List<TaskModel>> streamAllTasks() {
+    return _firestore
+        .collectionGroup('tasks')
+        .snapshots()
+        .map((snap) {
+      final tasks =
+          snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList();
+      tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
+      return tasks;
+    });
+  }
+
   // to get the user (club member) tasks
   Future<List<TaskModel>> getUserTasks(String userId) async {
     try {

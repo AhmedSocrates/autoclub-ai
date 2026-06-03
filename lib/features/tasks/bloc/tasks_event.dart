@@ -14,7 +14,9 @@ class LoadMyTasksEvent extends TasksEvent {
 
 class MarkTaskCompleteEvent extends TasksEvent {
   final String taskId;
-  MarkTaskCompleteEvent(this.taskId);
+  final String eventId;
+  final String completionMessage;
+  MarkTaskCompleteEvent(this.taskId, this.eventId, this.completionMessage);
   @override
-  List<Object?> get props => [taskId];
+  List<Object?> get props => [taskId, eventId, completionMessage];
 }

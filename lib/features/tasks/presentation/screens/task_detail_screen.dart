@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../bloc/tasks_bloc.dart';
-import '../bloc/tasks_event.dart';
-import '../bloc/tasks_state.dart';
-import '../../../core/models/task.dart';
+import '../../bloc/tasks_bloc.dart';
+import '../../bloc/tasks_event.dart';
+import '../../bloc/tasks_state.dart';
+import '../../../../core/models/task.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final String taskId;
@@ -214,7 +214,7 @@ class _TaskDetailView extends StatelessWidget {
                   onPressed: () {
                     context
                         .read<TasksBloc>()
-                        .add(MarkTaskCompleteEvent(task.taskId));
+                        .add(MarkTaskCompleteEvent(task.taskId, task.eventId, ''));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Row(

@@ -130,4 +130,33 @@ class EventRepository {
       throw Exception('Failed to retrieve members data.');
     }
   }
+
+  Stream<int> streamEventCount() {
+    return _firestore
+        .collection('events')
+        .snapshots()
+        .map((snap) => snap.size);
+  }
+
+  Future<void> deleteEvent(String eventId) async {
+    try {
+      final tasksSnapshot = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('tasks')
+          .get();
+
+      if (tasksSnapshot.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in tasksSnapshot.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      }
+
+      await _firestore.collection('events').doc(eventId).delete();
+    } catch (e) {
+      throw Exception('Failed to delete the event.');
+    }
+  }
 }

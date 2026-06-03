@@ -22,4 +22,12 @@ class AddEventSubmit extends EventEvent {
   List<Object?> get props => [event, tasks];
 }
 
+class DeleteEvent extends EventEvent {
+  final String eventId;
+  final String userId;
+  DeleteEvent({required this.eventId, required this.userId});
+  @override
+  List<Object?> get props => [eventId, userId];
+}
+
 class DismissEventAlert extends EventEvent {}

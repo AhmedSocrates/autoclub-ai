@@ -29,6 +29,20 @@ class EventBloc extends Bloc<EventEvent, EventState> {
       }
     });
 
+    on<DeleteEvent>((event, emit) async {
+      try {
+        await eventRepository.deleteEvent(event.eventId);
+        final events = await eventRepository.getEventsWithUserTaskCount(event.userId);
+        emit(EventLoaded(events));
+        emit(EventAlert('Event deleted successfully.'));
+      } catch (e) {
+        emit(EventAlert(
+          e.toString().replaceFirst('Exception: ', ''),
+          isSuccess: false,
+        ));
+      }
+    });
+
     on<DismissEventAlert>((event, emit) {
       emit(EventInitial());
     });

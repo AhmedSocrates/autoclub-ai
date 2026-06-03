@@ -7,7 +7,7 @@ class AIService {
   final GenerativeModel _model;
 
   AIService(String apiKey)
-      : _model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
+      : _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
 
   /// Generates 3–5 tasks for the given event.
   ///

@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 class AppAlertDialog extends StatelessWidget {
   final String message;
   final String buttonText;
+  final bool showCancel;
+  final VoidCallback? onConfirm;
 
   const AppAlertDialog({
     super.key,
     required this.message,
     this.buttonText = 'Dismiss',
+    this.showCancel = false,
+    this.onConfirm,
   });
 
   @override
@@ -45,6 +49,7 @@ class AppAlertDialog extends StatelessWidget {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
+                onConfirm?.call();
               },
               child: Text(
                 buttonText,
@@ -53,6 +58,26 @@ class AppAlertDialog extends StatelessWidget {
                 ),
               ),
             ),
+            if (showCancel) ...[
+              const SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.textPrimary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: AppColors.border),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Cancel',
+                  style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -65,12 +90,16 @@ Future<void> showAppAlert(
   BuildContext context, {
   required String message,
   String buttonText = 'Dismiss',
+  bool showCancel = false,
+  VoidCallback? onConfirm,
 }) {
   return showDialog<void>(
     context: context,
     builder: (context) => AppAlertDialog(
       message: message,
       buttonText: buttonText,
+      showCancel: showCancel,
+      onConfirm: onConfirm,
     ),
   );
 }

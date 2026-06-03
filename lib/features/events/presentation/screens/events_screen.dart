@@ -1,4 +1,5 @@
 import 'package:auto_club_ai/core/theme/app_colors.dart';
+import 'package:auto_club_ai/shared_widgets/alert.dart';
 import 'package:auto_club_ai/core/theme/app_text_styles.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_state.dart';
@@ -29,6 +30,23 @@ class _EventsScreenState extends State<EventsScreen> {
     if (authState is Authenticated) {
       context.read<EventBloc>().add(LoadEvents(authState.user.userId));
     }
+  }
+
+  void _confirmDelete(BuildContext context, String eventId) {
+    final authState = context.read<AuthBloc>().state;
+    showAppAlert(
+      context,
+      message: 'Are you sure you want to delete this event?',
+      buttonText: 'Delete',
+      showCancel: true,
+      onConfirm: () {
+        if (authState is Authenticated) {
+          context.read<EventBloc>().add(
+            DeleteEvent(eventId: eventId, userId: authState.user.userId),
+          );
+        }
+      },
+    );
   }
 
   bool get _isLeader {
@@ -130,6 +148,7 @@ class _EventsScreenState extends State<EventsScreen> {
             return EventCard(
               event: item,
               onTap: () => context.push('/events/event/${item.eventId}'),
+              onDelete: _isLeader ? () => _confirmDelete(context, item.eventId) : null,
             );
           },
         ),
