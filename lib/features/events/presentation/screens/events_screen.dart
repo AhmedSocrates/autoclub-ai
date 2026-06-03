@@ -56,7 +56,19 @@ class _EventsScreenState extends State<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EventBloc, EventState>(
+    return BlocConsumer<EventBloc, EventState>(
+      listenWhen: (_, current) => current is EventAlert,
+      listener: (context, state) {
+        if (state is EventAlert) {
+          final bloc = context.read<EventBloc>();
+          final isSuccess = state.isSuccess;
+          showAppAlert(context, message: state.message).then((_) {
+            if (!mounted) return;
+            bloc.add(DismissEventAlert());
+            if (isSuccess) _loadEvents();
+          });
+        }
+      },
       buildWhen: (_, current) => current is! EventAlert,
       builder: (context, state) {
         return Scaffold(
@@ -116,23 +128,33 @@ class _EventsScreenState extends State<EventsScreen> {
 
     if (state is EventLoaded) {
       if (state.events.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.event_outlined, size: 64, color: AppColors.textDisabled),
-                const SizedBox(height: 16),
-                Text('No Upcoming Events', style: AppTextStyles.h3),
-                const SizedBox(height: 8),
-                Text(
-                  'There are no upcoming events scheduled.',
-                  style: AppTextStyles.bodySm,
-                  textAlign: TextAlign.center,
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async => _loadEvents(),
+          child: CustomScrollView(
+            slivers: [
+              SliverFillRemaining(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.event_outlined, size: 64, color: AppColors.textDisabled),
+                        const SizedBox(height: 16),
+                        Text('No Upcoming Events', style: AppTextStyles.h3),
+                        const SizedBox(height: 8),
+                        Text(
+                          'There are no upcoming events scheduled.',
+                          style: AppTextStyles.bodySm,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }

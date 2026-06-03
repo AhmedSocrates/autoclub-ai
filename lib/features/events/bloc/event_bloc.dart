@@ -30,6 +30,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
     });
 
     on<DeleteEvent>((event, emit) async {
+      emit(EventLoading());
       try {
         await eventRepository.deleteEvent(event.eventId);
         final events = await eventRepository.getEventsWithUserTaskCount(event.userId);
