@@ -5,12 +5,13 @@ class TaskModel extends Equatable {
   final String taskId;
   final String title;
   final String description;
-  final String assignedTo;      // userId
+  final String assignedTo;
   final String assignedToName;
-  final String status;          // 'pending' | 'completed'
+  final String status;
   final DateTime createdAt;
   final String createdBy;
   final String? eventContext;
+  final DateTime? dueDate;
 
   const TaskModel({
     required this.taskId,
@@ -22,9 +23,40 @@ class TaskModel extends Equatable {
     required this.createdAt,
     required this.createdBy,
     this.eventContext,
+    this.dueDate,
   });
 
   bool get isCompleted => status == 'completed';
+
+  bool get isOverdue {
+    if (dueDate == null || isCompleted) return false;
+    final today = DateTime.now();
+    return dueDate!.isBefore(DateTime(today.year, today.month, today.day));
+  }
+
+  bool get isDueToday {
+    if (dueDate == null || isCompleted) return false;
+    final today = DateTime.now();
+    return dueDate!.year == today.year &&
+        dueDate!.month == today.month &&
+        dueDate!.day == today.day;
+  }
+
+  /// Days remaining until due date (0 = today, negative = overdue).
+  int get daysUntilDue {
+    if (dueDate == null) return 999;
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final dueDay =
+        DateTime(dueDate!.year, dueDate!.month, dueDate!.day);
+    return dueDay.difference(todayDate).inDays;
+  }
+
+  /// True when due within 10 days and not already today/overdue/completed.
+  bool get isDueSoon {
+    if (dueDate == null || isCompleted || isDueToday || isOverdue) return false;
+    return daysUntilDue <= 10;
+  }
 
   factory TaskModel.fromJson(Map<String, dynamic> json, String id) {
     return TaskModel(
@@ -39,6 +71,9 @@ class TaskModel extends Equatable {
           : DateTime.now(),
       createdBy: json['createdBy'] as String? ?? '',
       eventContext: json['eventContext'] as String?,
+      dueDate: json['dueDate'] is Timestamp
+          ? (json['dueDate'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -52,6 +87,7 @@ class TaskModel extends Equatable {
       'createdAt': FieldValue.serverTimestamp(),
       'createdBy': createdBy,
       if (eventContext != null) 'eventContext': eventContext,
+      if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate!),
     };
   }
 
@@ -66,12 +102,13 @@ class TaskModel extends Equatable {
       createdAt: createdAt,
       createdBy: createdBy,
       eventContext: eventContext,
+      dueDate: dueDate,
     );
   }
 
   @override
   List<Object?> get props => [
         taskId, title, description, assignedTo,
-        assignedToName, status, createdAt, createdBy, eventContext,
+        assignedToName, status, createdAt, createdBy, eventContext, dueDate,
       ];
 }

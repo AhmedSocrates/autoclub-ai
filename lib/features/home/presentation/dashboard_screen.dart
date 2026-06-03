@@ -7,6 +7,7 @@ import '../../tasks/bloc/tasks_bloc.dart';
 import '../../tasks/bloc/tasks_event.dart';
 import '../../tasks/bloc/tasks_state.dart';
 import '../../../core/models/task.dart';
+import '../../tasks/presentation/task_detail_screen.dart';
 import '../../tasks/presentation/widgets/task_card.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -205,6 +206,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const EdgeInsets.symmetric(vertical: 0),
                                 child: TaskCard(
                                   task: t,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          TaskDetailScreen(taskId: t.taskId),
+                                    ),
+                                  ),
                                   onMarkComplete: t.isCompleted
                                       ? null
                                       : () => context

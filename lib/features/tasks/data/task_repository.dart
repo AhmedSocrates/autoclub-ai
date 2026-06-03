@@ -5,14 +5,18 @@ class TaskRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Streams all tasks assigned to [userId], ordered newest first.
+  /// Sorted in Dart to avoid requiring a composite Firestore index.
   Stream<List<TaskModel>> streamMyTasks(String userId) {
     return _firestore
         .collection('tasks')
         .where('assignedTo', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList());
+        .map((snap) {
+      final tasks =
+          snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList();
+      tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return tasks;
+    });
   }
 
   /// Streams every task in the club, ordered newest first (admin view).

@@ -6,6 +6,7 @@ import '../bloc/tasks_bloc.dart';
 import '../bloc/tasks_event.dart';
 import '../bloc/tasks_state.dart';
 import '../../../core/models/task.dart';
+import 'task_detail_screen.dart';
 import 'widgets/task_card.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -38,21 +39,14 @@ class _TasksScreenState extends State<TasksScreen> {
         title: const Text('My Tasks'),
         centerTitle: true,
       ),
-      body: BlocConsumer<TasksBloc, TasksState>(
-        listenWhen: (_, current) => current is TasksError,
-        listener: (context, state) {
-          if (state is TasksError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          }
-        },
+      body: BlocBuilder<TasksBloc, TasksState>(
         builder: (context, state) {
           if (state is TasksLoading || state is TasksInitial) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is TasksError) {
+            return _ErrorState(message: state.message);
           }
 
           List<TaskModel> tasks = [];
@@ -85,6 +79,12 @@ class _TasksScreenState extends State<TasksScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (ctx, i) => TaskCard(
                         task: pending[i],
+                        onTap: () => Navigator.of(ctx).push(
+                          MaterialPageRoute(
+                            builder: (_) => TaskDetailScreen(
+                                taskId: pending[i].taskId),
+                          ),
+                        ),
                         onMarkComplete: () => ctx
                             .read<TasksBloc>()
                             .add(MarkTaskCompleteEvent(pending[i].taskId)),
@@ -100,7 +100,15 @@ class _TasksScreenState extends State<TasksScreen> {
                   ),
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (ctx, i) => TaskCard(task: completed[i]),
+                      (ctx, i) => TaskCard(
+                        task: completed[i],
+                        onTap: () => Navigator.of(ctx).push(
+                          MaterialPageRoute(
+                            builder: (_) => TaskDetailScreen(
+                                taskId: completed[i].taskId),
+                          ),
+                        ),
+                      ),
                       childCount: completed.length,
                     ),
                   ),
@@ -148,6 +156,44 @@ class _SectionHeader extends StatelessWidget {
               backgroundColor: colorScheme.surfaceContainerHighest,
               padding: EdgeInsets.zero,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 64, color: colorScheme.error),
+            const SizedBox(height: 16),
+            Text(
+              'Could not load tasks',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),

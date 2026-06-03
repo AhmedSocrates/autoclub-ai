@@ -173,7 +173,7 @@ class _MembershipApplicationViewState
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
                   onChanged:
-                      isLoading ? null : (val) => setState(() => _selectedCommittee = val),
+                      isLoading ? null : (val) => _selectedCommittee = val,
                   validator: (val) =>
                       val == null ? 'Please select a committee' : null,
                 ),
