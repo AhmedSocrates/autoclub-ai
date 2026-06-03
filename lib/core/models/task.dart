@@ -3,112 +3,80 @@ import 'package:equatable/equatable.dart';
 
 class TaskModel extends Equatable {
   final String taskId;
-  final String title;
+  final String eventId;
+  final String name;
   final String description;
+  final String type;
+  final DateTime deadline;
+  final bool status;
+  final String completionMessage;
   final String assignedTo;
+  final String eventName;
   final String assignedToName;
-  final String status;
-  final DateTime createdAt;
-  final String createdBy;
-  final String? eventContext;
-  final DateTime? dueDate;
 
   const TaskModel({
     required this.taskId,
-    required this.title,
+    required this.eventId,
+    required this.name,
     required this.description,
+    required this.type,
+    required this.deadline,
+    this.status = false,
+    this.completionMessage = '',
+    this.eventName = '',
+    this.assignedToName = '',
     required this.assignedTo,
-    required this.assignedToName,
-    required this.status,
-    required this.createdAt,
-    required this.createdBy,
-    this.eventContext,
-    this.dueDate,
   });
 
-  bool get isCompleted => status == 'completed';
-
-  bool get isOverdue {
-    if (dueDate == null || isCompleted) return false;
-    final today = DateTime.now();
-    return dueDate!.isBefore(DateTime(today.year, today.month, today.day));
-  }
-
-  bool get isDueToday {
-    if (dueDate == null || isCompleted) return false;
-    final today = DateTime.now();
-    return dueDate!.year == today.year &&
-        dueDate!.month == today.month &&
-        dueDate!.day == today.day;
-  }
-
-  /// Days remaining until due date (0 = today, negative = overdue).
-  int get daysUntilDue {
-    if (dueDate == null) return 999;
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final dueDay =
-        DateTime(dueDate!.year, dueDate!.month, dueDate!.day);
-    return dueDay.difference(todayDate).inDays;
-  }
-
-  /// True when due within 10 days and not already today/overdue/completed.
-  bool get isDueSoon {
-    if (dueDate == null || isCompleted || isDueToday || isOverdue) return false;
-    return daysUntilDue <= 10;
-  }
-
-  factory TaskModel.fromJson(Map<String, dynamic> json, String id) {
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
-      taskId: id,
-      title: json['title'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      assignedTo: json['assignedTo'] as String? ?? '',
-      assignedToName: json['assignedToName'] as String? ?? '',
-      status: json['status'] as String? ?? 'pending',
-      createdAt: json['createdAt'] is Timestamp
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      createdBy: json['createdBy'] as String? ?? '',
-      eventContext: json['eventContext'] as String?,
-      dueDate: json['dueDate'] is Timestamp
-          ? (json['dueDate'] as Timestamp).toDate()
-          : null,
+      taskId: json['task_id'] as String,
+      eventId: json['event_id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      type: json['type'] as String,
+      deadline: (json['deadline'] as Timestamp).toDate(),
+      status: (json['status'] as bool?) ?? false,
+      completionMessage: (json['completion_message'] as String?) ?? '',
+      assignedTo: json['assigned_to'] as String,
+    );
+  }
+
+  TaskModel copyWith({
+    String? taskId,
+    String? eventId,
+    String? eventName,
+    String? assignedToName,
+  }) {
+    return TaskModel(
+      taskId: taskId ?? this.taskId,
+      eventId: eventId ?? this.eventId,
+      name: name,
+      description: description,
+      type: type,
+      deadline: deadline,
+      status: status,
+      completionMessage: completionMessage,
+      assignedTo: assignedTo,
+      eventName: eventName ?? this.eventName,
+      assignedToName: assignedToName ?? this.assignedToName,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
+      'task_id': taskId,
+      'event_id': eventId,
+      'name': name,
       'description': description,
-      'assignedTo': assignedTo,
-      'assignedToName': assignedToName,
+      'type': type,
+      'deadline': Timestamp.fromDate(deadline),
       'status': status,
-      'createdAt': FieldValue.serverTimestamp(),
-      'createdBy': createdBy,
-      if (eventContext != null) 'eventContext': eventContext,
-      if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate!),
+      'completion_message': completionMessage,
+      'assigned_to': assignedTo,
     };
   }
 
-  TaskModel copyWith({String? status}) {
-    return TaskModel(
-      taskId: taskId,
-      title: title,
-      description: description,
-      assignedTo: assignedTo,
-      assignedToName: assignedToName,
-      status: status ?? this.status,
-      createdAt: createdAt,
-      createdBy: createdBy,
-      eventContext: eventContext,
-      dueDate: dueDate,
-    );
-  }
-
   @override
-  List<Object?> get props => [
-        taskId, title, description, assignedTo,
-        assignedToName, status, createdAt, createdBy, eventContext, dueDate,
-      ];
+  List<Object?> get props => [taskId, name, description, type, deadline, status, completionMessage, assignedTo];
 }

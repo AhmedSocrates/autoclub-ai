@@ -17,9 +17,10 @@ import '../../features/membership/presentation/membership_status_screen.dart';
 // Shell + member screens
 import '../navigation/main_navigation_shell.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
-import '../../features/tasks/presentation/tasks_screen.dart';
-import '../../features/events/presentation/leader_events_screen.dart';
-import '../../features/social/presentation/social_screen.dart';
+import '../../features/tasks/presentation/screens/tasks_screen.dart';
+import '../../features/events/presentation/screens/add_event_screen.dart';
+import '../../features/events/presentation/screens/event_detail_screen.dart';
+import '../../features/events/presentation/screens/events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
 class AppRouter {
@@ -30,7 +31,7 @@ class AppRouter {
   static const String approvals        = '/approvals';
   static const String dashboard        = '/dashboard';
   static const String myTasks          = '/my-tasks';
-  static const String social           = '/social';
+  static const String events           = '/events';
   static const String settings         = '/settings';
 
   static GoRouter createRouter(AuthBloc authBloc) {
@@ -116,7 +117,22 @@ class AppRouter {
               ),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: social, builder: (_, _) => const SocialScreen()),
+              GoRoute(
+                path: events,
+                builder: (_, _) => const EventsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'add',
+                    builder: (_, _) => const AddEventScreen(),
+                  ),
+                  GoRoute(
+                    path: 'event/:eventId',
+                    builder: (context, state) => EventDetailScreen(
+                      eventId: state.pathParameters['eventId']!,
+                    ),
+                  ),
+                ],
+              ),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(path: settings, builder: (_, _) => const SettingsScreen()),

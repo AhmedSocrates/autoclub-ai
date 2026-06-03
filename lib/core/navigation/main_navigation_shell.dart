@@ -29,9 +29,9 @@ class MainNavigationShell extends StatelessWidget {
             label: 'Tasks',
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Social',
+            icon: Icon(Icons.event_outlined),
+            selectedIcon: Icon(Icons.event),
+            label: 'Events',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

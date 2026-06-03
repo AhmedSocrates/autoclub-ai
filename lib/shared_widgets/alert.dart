@@ -61,19 +61,49 @@ class AppAlertDialog extends StatelessWidget {
 }
 
 
-void showAppAlert(
+Future<void> showAppAlert(
   BuildContext context, {
   required String message,
-  
   String buttonText = 'Dismiss',
 }) {
-  showDialog(
+  return showDialog<void>(
     context: context,
-    builder: (context) {
-      return AppAlertDialog(
-        message: message,
-        buttonText: buttonText,
-      );
-    },
+    builder: (context) => AppAlertDialog(
+      message: message,
+      buttonText: buttonText,
+    ),
+  );
+}
+
+void showLoadingDialog(BuildContext context, {String message = 'Please wait...'}) {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.borderDark, width: 1.5),
+      ),
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              strokeWidth: 3,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              message,
+              style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 }
