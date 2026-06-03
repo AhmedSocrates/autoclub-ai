@@ -25,22 +25,10 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-try {
-    await dotenv.load(fileName: ".env");
-    print(" DOTENV SUCCESS: .env file loaded successfully!");
-    print("🔑 GEMINI KEY FOUND: ${dotenv.env['GEMINI_API_KEY'] != null}");
-  } catch (e) {
-    print(" DOTENV CRITICAL ERROR: Could not load .env file! Details: $e");
-  }
-  try {
-    // Fixed: Only initialize Firebase once!
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print(" Firebase initialized successfully!");
-  } catch (e) {
-    print(" Firebase initialization failed: $e");
-  }
+  await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     MultiRepositoryProvider(

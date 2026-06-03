@@ -7,13 +7,12 @@ class DatePickerField extends FormField<DateTime> {
   DatePickerField({
     super.key,
     required String label,
-    DateTime? initialValue,
+    super.initialValue,
     required DateTime firstDate,
     required DateTime lastDate,
     super.validator,
     ValueChanged<DateTime>? onChanged,
   }) : super(
-          initialValue: initialValue,
           builder: (FormFieldState<DateTime> state) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
