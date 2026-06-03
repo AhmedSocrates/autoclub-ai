@@ -96,15 +96,16 @@ class EventDetailCubit extends Cubit<EventDetailState> {
 
           await taskRepository.createTask(TaskModel(
             taskId: '',
-            title: leaderTask.title,
+            eventId: state.event.id,
+            name: leaderTask.title,
             description: 'Priority: ${leaderTask.priority.name}',
+            type: 'General',
+            deadline: leaderTask.dueDate ?? state.event.endDate,
             assignedTo: userId,
             assignedToName: name,
-            status: 'pending',
+            eventName: state.event.name,
+            status: false,
             createdAt: DateTime.now(),
-            createdBy: leaderUserId,
-            eventContext: state.event.name,
-            dueDate: leaderTask.dueDate,
           ));
           count++;
         }

@@ -135,15 +135,13 @@ class _TasksScreenState extends State<TasksScreen> {
               _SectionLabel('Pending (${pending.length})'),
               ...pending.map((task) => TaskCard(
                     task: task,
-                    onComplete: () => _showCompleteDialog(task.taskId, task.eventId, task.name),
+                    onMarkComplete: () =>
+                        _showCompleteDialog(task.taskId, task.eventId, task.name),
                   )),
             ],
             if (completed.isNotEmpty) ...[
               _SectionLabel('Completed (${completed.length})'),
-              ...completed.map((task) => TaskCard(
-                    task: task,
-                    onComplete: () {},
-                  )),
+              ...completed.map((task) => TaskCard(task: task)),
             ],
             const SizedBox(height: 16),
           ],

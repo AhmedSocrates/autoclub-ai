@@ -21,6 +21,7 @@ import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/events/presentation/screens/add_event_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
+import '../../features/events/presentation/leader_events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 
 class AppRouter {

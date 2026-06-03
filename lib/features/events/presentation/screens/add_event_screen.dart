@@ -86,6 +86,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
       final generatedTasks = await _aiService.generateTasks(
         eventName: _nameController.text.trim(),
         eventDescription: _descriptionController.text.trim(),
+        eventDate: _eventDate,
       );
 
       // Loop through AI results and create UI forms for each

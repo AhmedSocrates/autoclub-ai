@@ -4,36 +4,38 @@ import '../../../core/models/task.dart';
 class TaskRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Streams all tasks assigned to [userId], ordered newest first.
-  /// Sorted in Dart to avoid requiring a composite Firestore index.
+  /// Streams all tasks assigned to [userId], sorted by deadline ascending.
   Stream<List<TaskModel>> streamMyTasks(String userId) {
     return _firestore
         .collection('tasks')
-        .where('assignedTo', isEqualTo: userId)
+        .where('assigned_to', isEqualTo: userId)
         .snapshots()
         .map((snap) {
       final tasks =
           snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList();
-      tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
       return tasks;
     });
   }
 
-  /// Streams every task in the club, ordered newest first (admin view).
+  /// Streams every task in the club, sorted by deadline ascending (admin view).
   Stream<List<TaskModel>> streamAllTasks() {
     return _firestore
         .collection('tasks')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList());
+        .map((snap) {
+      final tasks =
+          snap.docs.map((d) => TaskModel.fromJson(d.data(), d.id)).toList();
+      tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
+      return tasks;
+    });
   }
 
   /// Marks a single task as completed.
   Future<void> markTaskComplete(String taskId) async {
     try {
       await _firestore.collection('tasks').doc(taskId).update({
-        'status': 'completed',
+        'status': true,
         'completedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
