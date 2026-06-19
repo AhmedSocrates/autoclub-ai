@@ -103,6 +103,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                       ),
+                      IconButton(
+                        icon: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(Icons.notifications_outlined, size: 26),
+                            Positioned(
+                              top: 2,
+                              right: 2,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.black, // Sleek black badge matching brand theme
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        onPressed: () => context.push('/notifications'),
+                      ),
+                      const SizedBox(width: 8),
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: colorScheme.primaryContainer,

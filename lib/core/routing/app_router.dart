@@ -22,6 +22,7 @@ import '../../features/events/presentation/screens/add_event_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 
 class AppRouter {
   // ── Route path constants ───────────────────────────────────────────────────
@@ -33,6 +34,7 @@ class AppRouter {
   static const String myTasks          = '/my-tasks';
   static const String events           = '/events';
   static const String settings         = '/settings';
+  static const String notifications    = '/notifications';
 
   static GoRouter createRouter(AuthBloc authBloc) {
     return GoRouter(
@@ -95,6 +97,9 @@ class AppRouter {
 
         // ── Admin Route (leader only) ─────────────────────────────────────────
         GoRoute(path: approvals, builder: (_, _) => const ApplicationApprovalsScreen()),
+
+        // ── Notifications Route ────────────────────────────────────────────────
+        GoRoute(path: notifications, builder: (_, _) => const NotificationsScreen()),
 
         // ── Member / Leader Shell (persistent bottom nav) ─────────────────────
         StatefulShellRoute.indexedStack(

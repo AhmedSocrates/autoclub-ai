@@ -5,6 +5,8 @@ import 'package:auto_club_ai/features/events/bloc/event_detail_event.dart';
 import 'package:auto_club_ai/features/events/bloc/event_detail_state.dart';
 import 'package:auto_club_ai/features/events/presentation/widgets/event_info_card.dart';
 import 'package:auto_club_ai/features/events/presentation/widgets/event_task_item.dart';
+import 'package:auto_club_ai/core/models/event.dart';
+import 'package:auto_club_ai/features/events/presentation/widgets/social_scheduler_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,6 +29,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void _load() =>
       context.read<EventDetailBloc>().add(LoadEventDetail(widget.eventId));
 
+  void _openSocialScheduler(BuildContext context, EventModel event) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SocialSchedulerSheet(event: event),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<EventDetailBloc, EventDetailState>(
@@ -36,7 +47,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             : 'Event Details';
 
         return Scaffold(
-          appBar: AppBar(title: Text(title), centerTitle: true),
+          appBar: AppBar(
+            title: Text(title),
+            centerTitle: true,
+            actions: [
+              if (state is EventDetailLoaded)
+                IconButton(
+                  icon: const Icon(Icons.campaign_outlined),
+                  tooltip: 'Schedule Post',
+                  onPressed: () => _openSocialScheduler(context, state.event),
+                ),
+            ],
+          ),
           body: _buildBody(state),
         );
       },
@@ -94,6 +116,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             // ── Event info ─────────────────────────────────────────────
             EventInfoCard(event: state.event),
+
+            const SizedBox(height: 12),
+
+            // ── Scheduler Action Button ────────────────────────────────
+            ElevatedButton.icon(
+              icon: const Icon(Icons.share_outlined, size: 18),
+              label: const Text('Schedule Social Announcement'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.black,
+                foregroundColor: AppColors.white,
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () => _openSocialScheduler(context, state.event),
+            ),
 
             const SizedBox(height: 24),
 

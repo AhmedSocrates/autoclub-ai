@@ -174,12 +174,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // ── General ───────────────────────────────────────────────────
               SectionHeader('General'),
-              const ListTile(
-                leading: Icon(Icons.notifications_outlined),
-                title: Text('Notifications'),
-                subtitle: Text('Coming in Sprint 3'),
-                trailing: Icon(Icons.chevron_right),
-                enabled: false,
+              ListTile(
+                leading: const Icon(Icons.notifications_outlined),
+                title: const Text('Notifications'),
+                subtitle: const Text('View history & assignment logs'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/notifications'),
               ),
               const ListTile(
                 leading: Icon(Icons.color_lens_outlined),
