@@ -2,12 +2,15 @@
 import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/task.dart';
+import '../../features/social/models/scheduled_post.dart';
 
 class AIService {
   final GenerativeModel _model;
+  final GenerativeModel _socialModel;
 
   AIService(String apiKey)
-      : _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
+      : _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey),
+        _socialModel = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
 
   /// Generates 3–5 tasks for the given event.
   ///
@@ -84,6 +87,46 @@ class AIService {
       }).toList();
     } catch (e) {
       throw Exception('Failed to generate tasks: $e');
+    }
+  }
+
+  /// Generates social copy for an event announcement: an engaging Facebook
+  /// caption, a short Telegram message, and an image-generation prompt for
+  /// a flyer background.
+  Future<SocialPostDraft> generateSocialPost(
+    String eventName,
+    String eventDescription,
+  ) async {
+    final prompt = '''
+      You are a social media copywriter for a University Car Club.
+      The club is announcing an event called: "$eventName".
+      Event Details: "$eventDescription".
+
+      Return ONLY a valid JSON object. Do not use markdown like ```json.
+
+      The object must have exactly these keys:
+      - "facebook_caption": An engaging, emoji-rich, long-form Facebook post (3-5 sentences) announcing the event.
+      - "telegram_message": A short, punchy message using Telegram markdown (*bold*, _italic_) under 280 characters.
+      - "poster_prompt": A descriptive image-generation prompt for a digital event flyer background, focused on visual style, mood, and setting.
+    ''';
+
+    try {
+      final response = await _socialModel.generateContent([Content.text(prompt)]);
+      final String? text = response.text;
+      if (text == null || text.isEmpty) {
+        throw Exception('Empty response from AI.');
+      }
+
+      final cleanJson = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final Map<String, dynamic> json = jsonDecode(cleanJson);
+
+      return SocialPostDraft(
+        facebookCaption: json['facebook_caption']?.toString() ?? '',
+        telegramMessage: json['telegram_message']?.toString() ?? '',
+        posterPrompt: json['poster_prompt']?.toString() ?? '',
+      );
+    } catch (e) {
+      throw Exception('Failed to generate social post: $e');
     }
   }
 }

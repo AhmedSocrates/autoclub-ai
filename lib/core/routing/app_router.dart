@@ -23,6 +23,7 @@ import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/social/presentation/screens/social_dashboard_screen.dart';
 
 class AppRouter {
   // ── Route path constants ───────────────────────────────────────────────────
@@ -33,6 +34,7 @@ class AppRouter {
   static const String dashboard        = '/dashboard';
   static const String myTasks          = '/my-tasks';
   static const String events           = '/events';
+  static const String social           = '/social';
   static const String settings         = '/settings';
   static const String notifications    = '/notifications';
 
@@ -132,6 +134,9 @@ class AppRouter {
                   ),
                 ],
               ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(path: social, builder: (_, _) => const SocialDashboardScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(path: settings, builder: (_, _) => const SettingsScreen()),

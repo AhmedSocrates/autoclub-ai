@@ -1,10 +1,13 @@
 import 'package:auto_club_ai/core/models/event.dart';
 import 'package:auto_club_ai/core/models/task.dart';
 import 'package:auto_club_ai/features/events/models/event_with_task_count.dart';
+import 'package:auto_club_ai/features/notifications/data/notification_repository.dart';
+import 'package:auto_club_ai/features/notifications/models/notification_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationRepository _notificationRepository = NotificationRepository();
 
   Future<List<EventModel>> getEvents() async {
     try {
@@ -64,11 +67,25 @@ class EventRepository {
       // Write tasks into the event's subcollection
       if (tasks.isNotEmpty) {
         final batch = _firestore.batch();
+        final savedTasks = <TaskModel>[];
         for (final task in tasks) {
           final taskRef = ref.collection('tasks').doc();
-          batch.set(taskRef, task.copyWith(taskId: taskRef.id, eventId: eventId).toJson());
+          final savedTask = task.copyWith(taskId: taskRef.id, eventId: eventId);
+          batch.set(taskRef, savedTask.toJson());
+          savedTasks.add(savedTask);
         }
         await batch.commit();
+
+        // PB-009: notify whoever a task was assigned to at creation time.
+        for (final task in savedTasks.where((t) => t.assignedTo.isNotEmpty)) {
+          await _notificationRepository.notifyUsers(
+            recipientIds: [task.assignedTo],
+            title: 'Task Assigned',
+            message: 'You have been assigned to: "${task.name}" for "${event.name}".',
+            type: NotificationType.assignment,
+            relatedId: task.taskId,
+          );
+        }
       }
     } catch (e) {
       throw Exception('Failed to create event. Please try again.');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/event.dart';
+import '../../../auth/bloc/auth_bloc.dart';
+import '../../../auth/bloc/auth_state.dart';
 import '../../../tasks/bloc/task_bloc.dart';
 import '../../../tasks/bloc/task_state.dart';
 import '../../../tasks/bloc/tasks_bloc.dart';
@@ -13,6 +16,7 @@ import '../../../events/bloc/event_bloc.dart';
 import '../../../events/bloc/event_state.dart';
 import '../../../tasks/presentation/screens/task_detail_screen.dart';
 import '../../../events/presentation/widgets/social_scheduler_sheet.dart';
+import '../../data/notification_repository.dart';
 import '../../models/notification_model.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -23,65 +27,28 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  // Pre-populated mock historical notifications for a club member
-  List<NotificationModel> _notifications = [
-    NotificationModel(
-      id: 'n1',
-      title: 'Task Assigned',
-      message: 'You have been assigned to: "Prepare marketing flyer for Auto Show" by Leader Mike.',
-      timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
-      type: NotificationType.assignment,
-      isRead: false,
-      relatedId: 'task_marketing_flyer',
-    ),
-    NotificationModel(
-      id: 'n2',
-      title: 'Task Overdue Warning',
-      message: 'Urgent: "Confirm event catering count" is past its due date!',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      type: NotificationType.system,
-      isRead: false,
-      relatedId: 'task_catering',
-    ),
-    NotificationModel(
-      id: 'n3',
-      title: 'Task Completed',
-      message: 'Sarah marked "Rent sound system" as complete.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      type: NotificationType.taskUpdate,
-      isRead: true,
-      relatedId: 'task_sound_system',
-    ),
-    NotificationModel(
-      id: 'n4',
-      title: 'Event Venue Updated',
-      message: 'The location for "Spring Car Rally" has been changed to Speedway Arena.',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      type: NotificationType.eventUpdate,
-      isRead: true,
-      relatedId: 'event_spring_rally',
-    ),
-    NotificationModel(
-      id: 'n5',
-      title: 'Task Assignment Log',
-      message: 'Leader Mike assigned "Decorate main stage" to Alex.',
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      type: NotificationType.assignment,
-      isRead: true,
-      relatedId: 'task_decorate_stage',
-    ),
-    NotificationModel(
-      id: 'n6',
-      title: 'New Event Scheduled',
-      message: 'A new event "Offroad Trail Run" has been scheduled for next Saturday.',
-      timestamp: DateTime.now().subtract(const Duration(days: 3)),
-      type: NotificationType.eventUpdate,
-      isRead: true,
-      relatedId: 'event_offroad_run',
-    ),
-  ];
+  final NotificationRepository _repository = NotificationRepository();
+  StreamSubscription<List<NotificationModel>>? _subscription;
 
+  List<NotificationModel> _notifications = [];
   String _selectedFilter = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      _subscription = _repository.streamForUser(authState.user.userId).listen((notifications) {
+        if (mounted) setState(() => _notifications = notifications);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,23 +204,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        final originalIndex = _notifications.indexOf(item);
         setState(() {
-          _notifications.removeAt(originalIndex);
+          _notifications.remove(item);
         });
+        _repository.delete(item.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Notification cleared'),
-            action: SnackBarAction(
-              label: 'Undo',
-              textColor: AppColors.accentGold,
-              onPressed: () {
-                setState(() {
-                  _notifications.insert(originalIndex, item);
-                });
-              },
-            ),
-          ),
+          const SnackBar(content: Text('Notification cleared')),
         );
       },
       child: InkWell(
@@ -377,20 +333,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _toggleReadStatus(String id) {
+    final index = _notifications.indexWhere((n) => n.id == id);
+    if (index == -1) return;
     setState(() {
-      final index = _notifications.indexWhere((n) => n.id == id);
-      if (index != -1) {
-        _notifications[index] = _notifications[index].copyWith(
-          isRead: !_notifications[index].isRead,
-        );
-      }
+      _notifications[index] = _notifications[index].copyWith(
+        isRead: !_notifications[index].isRead,
+      );
     });
+    _repository.markAsRead(id);
   }
 
   void _markAllAsRead() {
+    final unread = _notifications.where((n) => !n.isRead).toList();
     setState(() {
       _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
     });
+    for (final n in unread) {
+      _repository.markAsRead(n.id);
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('All notifications marked as read'),
