@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/models/event.dart';
+import '../../../../core/services/ai_service.dart';
+import '../../../../core/services/telegram_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../social/data/social_repository.dart';
+import '../../../social/models/scheduled_post.dart';
 
 class SocialSchedulerSheet extends StatefulWidget {
   final EventModel event;
@@ -16,36 +21,70 @@ class SocialSchedulerSheet extends StatefulWidget {
 enum SchedulerState { idle, loading, success }
 
 class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
-  late final TextEditingController _messageController;
+  late final TextEditingController _facebookController;
+  late final TextEditingController _telegramController;
   bool _scheduleForLater = false;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
 
   bool _facebookSelected = true;
   bool _telegramSelected = true;
+  bool _isGenerating = false;
+  String? _posterPrompt;
+  String? _resultMessage;
 
   SchedulerState _currentState = SchedulerState.idle;
+
+  final SocialRepository _socialRepository = SocialRepository();
 
   @override
   void initState() {
     super.initState();
-    // Pre-populate with realistic event announcement text
     final dateStr = DateFormat('EEEE, dd MMMM yyyy • HH:mm').format(widget.event.date);
-    _messageController = TextEditingController(
-      text: '📢 Upcoming Event: ${widget.event.name}\n'
-          '📍 Venue: ${widget.event.venue}\n'
-          '📅 Date: $dateStr\n\n'
-          '${widget.event.description}\n\n'
-          'Join us for this exciting club event! See you there! 🚗💨',
-    );
+    final fallback = '📢 Upcoming Event: ${widget.event.name}\n'
+        '📍 Venue: ${widget.event.venue}\n'
+        '📅 Date: $dateStr\n\n'
+        '${widget.event.description}\n\n'
+        'Join us for this exciting club event! See you there! 🚗💨';
+    _facebookController = TextEditingController(text: fallback);
+    _telegramController = TextEditingController(text: fallback);
     _selectedDate = DateTime.now().add(const Duration(days: 1));
     _selectedTime = const TimeOfDay(hour: 12, minute: 0);
   }
 
   @override
   void dispose() {
-    _messageController.dispose();
+    _facebookController.dispose();
+    _telegramController.dispose();
     super.dispose();
+  }
+
+  Future<void> _generateWithAi() async {
+    setState(() => _isGenerating = true);
+    try {
+      final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+      final aiService = AIService(apiKey);
+      final draft = await aiService.generateSocialPost(
+        widget.event.name,
+        widget.event.description,
+      );
+      if (!mounted) return;
+      setState(() {
+        _facebookController.text = draft.facebookCaption;
+        _telegramController.text = draft.telegramMessage;
+        _posterPrompt = draft.posterPrompt;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('AI generation failed: ${e.toString().replaceFirst('Exception: ', '')}'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
+    }
   }
 
   Future<void> _selectDate() async {
@@ -100,6 +139,19 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
     }
   }
 
+  DateTime get _resolvedScheduledTime {
+    if (!_scheduleForLater || _selectedDate == null || _selectedTime == null) {
+      return DateTime.now();
+    }
+    return DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    );
+  }
+
   void _submit() async {
     if (!_facebookSelected && !_telegramSelected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,33 +167,84 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
       _currentState = SchedulerState.loading;
     });
 
-    // Simulate scheduling delay
-    await Future.delayed(const Duration(seconds: 2));
+    final platforms = [
+      if (_facebookSelected) 'facebook',
+      if (_telegramSelected) 'telegram',
+    ];
 
-    if (mounted) {
-      setState(() {
-        _currentState = SchedulerState.success;
-      });
-    }
+    var post = ScheduledPost(
+      id: '',
+      eventId: widget.event.eventId,
+      eventName: widget.event.name,
+      targetPlatforms: platforms,
+      scheduledTime: _resolvedScheduledTime,
+      facebookCaption: _facebookController.text,
+      telegramMessage: _telegramController.text,
+      posterPrompt: _posterPrompt ?? '',
+      createdAt: DateTime.now(),
+    );
 
-    // Auto-dismiss bottom sheet after success sequence
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_scheduleForLater
-              ? 'Post successfully scheduled for execution!'
-              : 'Announcement successfully posted to channels!'),
-          backgroundColor: Colors.green.shade800,
-        ),
-      );
+    try {
+      post = await _socialRepository.createPost(post);
+
+      // Telegram is wired to the real Bot API; Facebook has no backend
+      // this sprint, so it always stays pending for manual posting.
+      if (_telegramSelected && !_scheduleForLater) {
+        try {
+          final botToken = dotenv.env['TELEGRAM_BOT_TOKEN'] ?? '';
+          final chatId = dotenv.env['TELEGRAM_CHAT_ID'] ?? '';
+          await TelegramService(botToken).sendMessage(
+            chatId: chatId,
+            text: _telegramController.text,
+          );
+          await _socialRepository.updateStatus(post.id, ScheduledPostStatus.posted);
+          _resultMessage = _facebookSelected
+              ? 'Sent to Telegram now. Facebook caption saved — post it manually.'
+              : 'Sent to Telegram now.';
+        } catch (e) {
+          await _socialRepository.updateStatus(post.id, ScheduledPostStatus.failed);
+          _resultMessage =
+              'Telegram send failed: ${e.toString().replaceFirst('Exception: ', '')}';
+        }
+      } else {
+        _resultMessage = _scheduleForLater
+            ? 'Saved for later. Sending isn\'t automated yet — come back to send Telegram manually at the scheduled time, and post Facebook manually.'
+            : 'Saved. Post Facebook manually using the generated caption.';
+      }
+
+      if (mounted) {
+        setState(() {
+          _currentState = SchedulerState.success;
+        });
+      }
+
+      await Future.delayed(const Duration(milliseconds: 1800));
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_resultMessage ?? 'Post saved.'),
+            backgroundColor: Colors.green.shade800,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentState = SchedulerState.idle;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save post: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: AppColors.accentOrange,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Standard bottom sheet height adjustment for keyboard offset
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -229,25 +332,86 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
           ),
           const SizedBox(height: 20),
 
-          // ── Message Box ────────────────────────────────────────────────────
-          Text('Post Content', style: AppTextStyles.label.copyWith(letterSpacing: 0.8)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _messageController,
-            maxLines: 4,
-            style: AppTextStyles.bodyMd,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.surface,
-              hintText: 'Enter your announcement details here...',
-              hintStyle: const TextStyle(color: AppColors.textDisabled),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+          // ── AI Generate ───────────────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isGenerating ? null : _generateWithAi,
+              icon: _isGenerating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome, size: 18, color: Color(0xFF7C3AED)),
+              label: Text(
+                _isGenerating ? 'Generating…' : 'Generate with AI',
+                style: AppTextStyles.bodyMd.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF7C3AED),
+                ),
               ),
-              contentPadding: const EdgeInsets.all(16),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: Color(0xFF7C3AED)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
+          if (_posterPrompt != null && _posterPrompt!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Flyer prompt: $_posterPrompt',
+              style: AppTextStyles.bodySm.copyWith(
+                fontStyle: FontStyle.italic,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+
+          // ── Message Boxes ──────────────────────────────────────────────────
+          if (_facebookSelected) ...[
+            Text('Facebook Caption', style: AppTextStyles.label.copyWith(letterSpacing: 0.8)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _facebookController,
+              maxLines: 4,
+              style: AppTextStyles.bodyMd,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surface,
+                hintText: 'Enter your Facebook announcement here...',
+                hintStyle: const TextStyle(color: AppColors.textDisabled),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (_telegramSelected) ...[
+            Text('Telegram Message', style: AppTextStyles.label.copyWith(letterSpacing: 0.8)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _telegramController,
+              maxLines: 4,
+              style: AppTextStyles.bodyMd,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surface,
+                hintText: 'Enter your Telegram message here...',
+                hintStyle: const TextStyle(color: AppColors.textDisabled),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
 
           // ── Post Time Toggle ───────────────────────────────────────────────
@@ -263,8 +427,8 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
                   ),
                   Text(
                     _scheduleForLater
-                        ? 'Post will be published at selected time'
-                        : 'Post will be published immediately',
+                        ? 'Telegram send will need to be triggered manually at this time'
+                        : 'Telegram will be sent immediately',
                     style: AppTextStyles.bodySm,
                   ),
                 ],
@@ -427,12 +591,12 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
           ),
           const SizedBox(height: 24),
           Text(
-            _scheduleForLater ? 'Scheduling announcement...' : 'Publishing announcement...',
+            _scheduleForLater ? 'Saving scheduled post...' : 'Publishing announcement...',
             style: AppTextStyles.h3,
           ),
           const SizedBox(height: 8),
           const Text(
-            'Connecting to Facebook and Telegram APIs',
+            'Saving to Firestore and contacting Telegram',
             style: AppTextStyles.bodySm,
           ),
         ],
@@ -462,16 +626,17 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
           ),
           const SizedBox(height: 24),
           Text(
-            _scheduleForLater ? 'Scheduled Successfully' : 'Published Successfully',
+            'Saved',
             style: AppTextStyles.h2.copyWith(color: Colors.green.shade800),
           ),
           const SizedBox(height: 8),
-          Text(
-            _scheduleForLater
-                ? 'Your post will go live automatically.'
-                : 'Your post is now live on your channels.',
-            style: AppTextStyles.bodySm,
-            textAlign: TextAlign.center,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              _resultMessage ?? '',
+              style: AppTextStyles.bodySm,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
