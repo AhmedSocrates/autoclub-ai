@@ -4,6 +4,7 @@ import 'package:auto_club_ai/features/events/models/event_with_task_count.dart';
 import 'package:auto_club_ai/features/notifications/data/notification_repository.dart';
 import 'package:auto_club_ai/features/notifications/models/notification_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class EventRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -78,10 +79,11 @@ class EventRepository {
 
         // PB-009: notify whoever a task was assigned to at creation time.
         for (final task in savedTasks.where((t) => t.assignedTo.isNotEmpty)) {
+          final dueDate = DateFormat('MMM dd, yyyy').format(task.deadline);
           await _notificationRepository.notifyUsers(
             recipientIds: [task.assignedTo],
             title: 'Task Assigned',
-            message: 'You have been assigned to: "${task.name}" for "${event.name}".',
+            message: 'You have been assigned to: "${task.name}" for "${event.name}". Due: $dueDate.',
             type: NotificationType.assignment,
             relatedId: task.taskId,
           );

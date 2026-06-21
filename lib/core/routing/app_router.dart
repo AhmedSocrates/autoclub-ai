@@ -24,6 +24,7 @@ import '../../features/events/presentation/screens/events_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/social/presentation/screens/social_dashboard_screen.dart';
+import '../../features/tasks/presentation/screens/task_detail_screen.dart';
 
 class AppRouter {
   // ── Route path constants ───────────────────────────────────────────────────
@@ -37,6 +38,7 @@ class AppRouter {
   static const String social           = '/social';
   static const String settings         = '/settings';
   static const String notifications    = '/notifications';
+  static const String taskDetail       = '/task/:taskId';
 
   static GoRouter createRouter(AuthBloc authBloc) {
     return GoRouter(
@@ -102,6 +104,13 @@ class AppRouter {
 
         // ── Notifications Route ────────────────────────────────────────────────
         GoRoute(path: notifications, builder: (_, _) => const NotificationsScreen()),
+
+        // ── Task Detail (deep-link from push notifications) ──────────────────
+        GoRoute(
+          path: taskDetail,
+          builder: (context, state) =>
+              TaskDetailScreen(taskId: state.pathParameters['taskId']!),
+        ),
 
         // ── Member / Leader Shell (persistent bottom nav) ─────────────────────
         StatefulShellRoute.indexedStack(

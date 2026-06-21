@@ -69,21 +69,28 @@ class TaskRepository {
           .doc(taskId);
 
       final taskDoc = await taskRef.get();
-      final taskName = taskDoc.data()?['name'] as String? ?? 'A task';
+      final taskData = taskDoc.data();
+      final taskName = taskData?['name'] as String? ?? 'A task';
+      final assignedTo = taskData?['assigned_to'] as String? ?? '';
 
       await taskRef.update({
         'status': true,
         'completion_message': completionMessage,
       });
 
-      // PB-010: notify the Club President (all leaders) on completion.
-      await _notifyLeaders(taskName);
+      String memberName = 'A member';
+      if (assignedTo.isNotEmpty) {
+        final userDoc = await _firestore.collection('users').doc(assignedTo).get();
+        memberName = userDoc.data()?['name'] as String? ?? 'A member';
+      }
+
+      await _notifyLeaders(taskId, taskName, memberName);
     } catch (e) {
       throw Exception('Failed to complete task. Please try again.');
     }
   }
 
-  Future<void> _notifyLeaders(String taskName) async {
+  Future<void> _notifyLeaders(String taskId, String taskName, String memberName) async {
     final leaders = await _firestore
         .collection('users')
         .where('role', isEqualTo: 'leader')
@@ -93,8 +100,9 @@ class TaskRepository {
     await _notificationRepository.notifyUsers(
       recipientIds: leaderIds,
       title: 'Task Completed',
-      message: '"$taskName" has been marked as complete.',
+      message: '$memberName has completed "$taskName".',
       type: NotificationType.taskUpdate,
+      relatedId: taskId,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:auto_club_ai/core/services/notification_service.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
 import 'package:auto_club_ai/features/auth/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -83,7 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
       try {
         await authRepository.signIn(email: event.email, password: event.password);
-        
+        await NotificationService.instance.updateTokenOnLogin();
       } catch(e) {
         emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
         add(AuthUserChanged(null));
@@ -95,12 +96,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final User? newUser = await authRepository.signUp(email: event.email, password: event.password, username: event.username);
         if(newUser != null) {
-          await userRepository.createUser(newUser.uid, event.username); 
+          await userRepository.createUser(newUser.uid, event.username);
+          await NotificationService.instance.updateTokenOnLogin();
         }
       } catch(e) {
         emit(AuthError(e.toString().replaceFirst("Exception: ", "")));
         add(AuthUserChanged(null));
-      } 
+      }
     });
 
 
@@ -133,6 +135,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<SignOutRequested>((event, emit) async {
+      await NotificationService.instance.clearTokenOnLogout();
       await authRepository.signOut();
       emit(Unauthenticated());
     });
@@ -161,6 +164,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<DeleteAccountRequested>((event, emit) async {
       emit(AuthLoading());
       try {
+        await NotificationService.instance.clearTokenOnLogout();
         await userRepository.deleteUser(event.uid);
         await authRepository.deleteAccount();
         

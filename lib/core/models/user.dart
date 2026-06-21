@@ -8,6 +8,7 @@ class UserModel extends Equatable{
   final String role;
   final bool isMember;
   final bool isAvailable;
+  final String? fcmToken;
 
   const UserModel({
     required this.userId,
@@ -15,9 +16,10 @@ class UserModel extends Equatable{
     required this.role,
     this.isMember = false,
     this.isAvailable = true,
+    this.fcmToken,
   });
 
-  
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       userId: json['user_id'] as String,
@@ -25,10 +27,10 @@ class UserModel extends Equatable{
       role: json['role'] as String,
       isMember: (json['is_member'] as bool?) ?? false,
       isAvailable: (json['is_available'] as bool?) ?? true,
+      fcmToken: json['fcm_token'] as String?,
     );
   }
 
-  // for storage
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -36,10 +38,11 @@ class UserModel extends Equatable{
       'role': role,
       'is_member': isMember,
       'is_available': isAvailable,
+      if (fcmToken != null) 'fcm_token': fcmToken,
     };
   }
-  
+
   @override
 
-  List<Object?> get props => [userId, name, role, isMember, isAvailable];
+  List<Object?> get props => [userId, name, role, isMember, isAvailable, fcmToken];
 }

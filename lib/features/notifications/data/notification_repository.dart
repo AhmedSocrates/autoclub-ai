@@ -1,4 +1,5 @@
 // lib/features/notifications/data/notification_repository.dart
+import 'package:auto_club_ai/core/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification_model.dart';
 
@@ -18,7 +19,8 @@ class NotificationRepository {
             snap.docs.map((d) => NotificationModel.fromJson(d.data(), d.id)).toList());
   }
 
-  /// Writes one notification document per recipient in [recipientIds].
+  /// Writes one notification document per recipient in [recipientIds]
+  /// and queues a push notification for each.
   Future<void> notifyUsers({
     required List<String> recipientIds,
     required String title,
@@ -44,6 +46,17 @@ class NotificationRepository {
       batch.set(ref, notification.toJson());
     }
     await batch.commit();
+
+    await NotificationService.instance.sendPushToUsers(
+      recipientIds: recipientIds,
+      title: title,
+      body: message,
+      data: {
+        'type': type.name,
+        // ignore: use_null_aware_elements
+        if (relatedId != null) 'related_id': relatedId,
+      },
+    );
   }
 
   Future<void> markAsRead(String id) async {

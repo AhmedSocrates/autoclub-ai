@@ -1,11 +1,13 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:auto_club_ai/core/theme/app_theme.dart';
+import 'package:auto_club_ai/core/services/notification_service.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_bloc.dart';
 import 'package:auto_club_ai/features/auth/bloc/auth_event.dart';
 import 'package:auto_club_ai/features/auth/repositories/auth_repository.dart';
@@ -24,11 +26,14 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  await NotificationService.instance.initialize();
 
   runApp(
     MultiRepositoryProvider(
@@ -93,9 +98,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // We can read the AuthBloc here because the BlocProvider is now a parent of MyApp.
-    // This ensures our router is initialized exactly once.
     _router = AppRouter.createRouter(context.read<AuthBloc>());
+    NotificationService.instance.setRouter(_router);
   }
 
   @override
