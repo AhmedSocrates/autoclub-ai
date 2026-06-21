@@ -418,21 +418,24 @@ class _SocialSchedulerSheetState extends State<SocialSchedulerSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Schedule for Later',
-                    style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    _scheduleForLater
-                        ? 'Telegram send will need to be triggered manually at this time'
-                        : 'Telegram will be sent immediately',
-                    style: AppTextStyles.bodySm,
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Schedule for Later',
+                      style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      _scheduleForLater
+                          ? 'Telegram send will need to be triggered manually at this time'
+                          : 'Telegram will be sent immediately',
+                      style: AppTextStyles.bodySm,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Switch(
                 value: _scheduleForLater,
                 onChanged: (val) {
