@@ -38,7 +38,7 @@ class _ApprovalsView extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/settingsgit a'),
+          onPressed: () => context.go('/settings'),
         ),
       ),
       body: Column(
